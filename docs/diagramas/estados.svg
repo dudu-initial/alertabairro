@@ -1,0 +1,55 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1540" height="670" viewBox="0 0 1540 670" role="img" aria-label="Ciclo de vida da ocorrência">
+<defs><marker id="arrow" markerWidth="10" markerHeight="8" refX="8" refY="4" orient="auto"><path d="M0,0 L9,4 L0,8 Z" fill="#087F88"/></marker><marker id="coralArrow" markerWidth="10" markerHeight="8" refX="8" refY="4" orient="auto"><path d="M0,0 L9,4 L0,8 Z" fill="#D46153"/></marker><marker id="grayArrow" markerWidth="10" markerHeight="8" refX="8" refY="4" orient="auto"><path d="M0,0 L9,4 L0,8 Z" fill="#839BAD"/></marker></defs>
+<rect width="1540" height="670" fill="#F7FAFC"/>
+<rect x="0" y="0" width="1540" height="10" fill="#087F88"/>
+<text x="56" y="67" fill="#10263D" font-family="Inter,Segoe UI,Arial,sans-serif" font-size="30" font-weight="750">Ciclo de vida da ocorrência</text>
+<text x="57" y="96" fill="#61778A" font-family="Inter,Segoe UI,Arial,sans-serif" font-size="16">Eventos, perfis e condições de cada transição</text>
+<path d="M75 248 L127 248" fill="none" stroke="#087F88" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" marker-end="url(#arrow)"/>
+<path d="M315 248 L365 248" fill="none" stroke="#087F88" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" marker-end="url(#arrow)"/>
+<path d="M575 248 L625 248" fill="none" stroke="#087F88" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" marker-end="url(#arrow)"/>
+<path d="M825 248 L875 248" fill="none" stroke="#087F88" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" marker-end="url(#arrow)"/>
+<path d="M1085 248 L1135 248" fill="none" stroke="#087F88" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" marker-end="url(#arrow)"/>
+<path d="M1260 296 L1260 470" fill="none" stroke="#087F88" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" marker-end="url(#arrow)"/>
+<path d="M225 296 C225 414 362 531 666 531" fill="none" stroke="#D46153" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" marker-end="url(#coralArrow)"/>
+<path d="M470 296 C470 386 568 485 666 505" fill="none" stroke="#D46153" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" marker-end="url(#coralArrow)"/>
+<path d="M725 296 L725 470" fill="none" stroke="#D46153" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" marker-end="url(#coralArrow)"/>
+<circle cx="58" cy="248" r="16" fill="#10263D"/>
+<rect x="127" y="200" width="188" height="96" rx="18" fill="#FFFFFF" stroke="#D8E4EC" stroke-width="1.5"/>
+<rect x="127" y="200" width="7" height="96" rx="3.5" fill="#087F88"/>
+<text x="221.0" y="236" text-anchor="middle" fill="#10263D" font-family="Inter,Segoe UI,Arial,sans-serif" font-size="19" font-weight="700">Registrado</text>
+<text x="221.0" y="262" text-anchor="middle" fill="#61778A" font-family="Inter,Segoe UI,Arial,sans-serif" font-size="13" font-weight="500">Relato recebido</text>
+<rect x="365" y="200" width="210" height="96" rx="18" fill="#DCF4F2" stroke="#D8E4EC" stroke-width="1.5"/>
+<rect x="365" y="200" width="7" height="96" rx="3.5" fill="#087F88"/>
+<text x="470.0" y="236" text-anchor="middle" fill="#10263D" font-family="Inter,Segoe UI,Arial,sans-serif" font-size="19" font-weight="700">Em validação</text>
+<text x="470.0" y="262" text-anchor="middle" fill="#61778A" font-family="Inter,Segoe UI,Arial,sans-serif" font-size="13" font-weight="500">Triagem do agente</text>
+<rect x="625" y="200" width="200" height="96" rx="18" fill="#FFFFFF" stroke="#D8E4EC" stroke-width="1.5"/>
+<rect x="625" y="200" width="7" height="96" rx="3.5" fill="#087F88"/>
+<text x="725.0" y="236" text-anchor="middle" fill="#10263D" font-family="Inter,Segoe UI,Arial,sans-serif" font-size="19" font-weight="700">Confirmado</text>
+<text x="725.0" y="262" text-anchor="middle" fill="#61778A" font-family="Inter,Segoe UI,Arial,sans-serif" font-size="13" font-weight="500">Evidência avaliada</text>
+<rect x="875" y="200" width="210" height="96" rx="18" fill="#DCF4F2" stroke="#D8E4EC" stroke-width="1.5"/>
+<rect x="875" y="200" width="7" height="96" rx="3.5" fill="#087F88"/>
+<text x="980.0" y="236" text-anchor="middle" fill="#10263D" font-family="Inter,Segoe UI,Arial,sans-serif" font-size="19" font-weight="700">Alerta emitido</text>
+<text x="980.0" y="262" text-anchor="middle" fill="#61778A" font-family="Inter,Segoe UI,Arial,sans-serif" font-size="13" font-weight="500">Avisos internos criados</text>
+<rect x="1135" y="200" width="250" height="96" rx="18" fill="#FFFFFF" stroke="#D8E4EC" stroke-width="1.5"/>
+<rect x="1135" y="200" width="7" height="96" rx="3.5" fill="#087F88"/>
+<text x="1260.0" y="236" text-anchor="middle" fill="#10263D" font-family="Inter,Segoe UI,Arial,sans-serif" font-size="19" font-weight="700">Em monitoramento</text>
+<text x="1260.0" y="262" text-anchor="middle" fill="#61778A" font-family="Inter,Segoe UI,Arial,sans-serif" font-size="13" font-weight="500">Acompanhamento ativo</text>
+<rect x="666" y="470" width="190" height="96" rx="18" fill="#FCEAE5" stroke="#D8E4EC" stroke-width="1.5"/>
+<rect x="666" y="470" width="7" height="96" rx="3.5" fill="#D46153"/>
+<text x="761.0" y="506" text-anchor="middle" fill="#10263D" font-family="Inter,Segoe UI,Arial,sans-serif" font-size="19" font-weight="700">Descartado</text>
+<text x="761.0" y="532" text-anchor="middle" fill="#61778A" font-family="Inter,Segoe UI,Arial,sans-serif" font-size="13" font-weight="500">Justificativa registrada</text>
+<rect x="1150" y="470" width="220" height="96" rx="18" fill="#FFFFFF" stroke="#D8E4EC" stroke-width="1.5"/>
+<rect x="1150" y="470" width="7" height="96" rx="3.5" fill="#087F88"/>
+<text x="1260.0" y="506" text-anchor="middle" fill="#10263D" font-family="Inter,Segoe UI,Arial,sans-serif" font-size="19" font-weight="700">Encerrado</text>
+<text x="1260.0" y="532" text-anchor="middle" fill="#61778A" font-family="Inter,Segoe UI,Arial,sans-serif" font-size="13" font-weight="500">Caso concluído</text>
+<text x="339" y="181" text-anchor="middle" fill="#087F88" font-family="Inter,Segoe UI,Arial,sans-serif" font-size="14" font-weight="600">iniciar análise</text>
+<text x="600" y="181" text-anchor="middle" fill="#087F88" font-family="Inter,Segoe UI,Arial,sans-serif" font-size="14" font-weight="600">confirmar</text>
+<text x="849" y="181" text-anchor="middle" fill="#087F88" font-family="Inter,Segoe UI,Arial,sans-serif" font-size="14" font-weight="600">emitir alerta</text>
+<text x="1110" y="181" text-anchor="middle" fill="#087F88" font-family="Inter,Segoe UI,Arial,sans-serif" font-size="14" font-weight="600">acompanhar</text>
+<text x="1365" y="395" text-anchor="middle" fill="#087F88" font-family="Inter,Segoe UI,Arial,sans-serif" font-size="14" font-weight="600">encerrar</text>
+<text x="267" y="390" text-anchor="middle" fill="#D46153" font-family="Inter,Segoe UI,Arial,sans-serif" font-size="14" font-weight="600">descartar</text>
+<text x="518" y="420" text-anchor="middle" fill="#D46153" font-family="Inter,Segoe UI,Arial,sans-serif" font-size="14" font-weight="600">descartar</text>
+<text x="786" y="390" text-anchor="middle" fill="#D46153" font-family="Inter,Segoe UI,Arial,sans-serif" font-size="14" font-weight="600">rever decisão</text>
+<rect x="55" y="598" width="1430" height="45" rx="10" fill="#EAF1F5" stroke="#EAF1F5" stroke-width="1.5"/>
+<text x="75" y="627" text-anchor="start" fill="#17324A" font-family="Inter,Segoe UI,Arial,sans-serif" font-size="15" font-weight="500">Transições exigem agente ou gestor. Descarte exige justificativa; alerta exige ocorrência confirmada e mensagem válida.</text>
+</svg>

@@ -1,0 +1,43 @@
+@startuml
+title AlertaBairro — registro, validação e alerta
+actor Morador
+participant "Interface web" as UI
+participant "API HTTP" as API
+participant "Aplicação e regras" as Regras
+database SQLite as DB
+actor Agente
+participant "Notificações internas" as Avisos
+
+Morador -> UI : envia ocorrência
+UI -> API : POST /api/occurrences
+API -> Regras : validar campos e perfil
+alt dados inválidos
+  Regras --> API : erros
+  API --> UI : 400
+else dados válidos
+  Regras -> Regras : calcular risco e confiança
+  Regras -> DB : inserir Registrado
+  DB --> API : registro persistido
+  API --> UI : 201 + ocorrência
+end
+Agente -> UI : abre fila e detalhe
+UI -> API : GET /api/occurrences
+API -> DB : consultar
+DB --> UI : lista via API
+Agente -> UI : inicia análise e confirma
+UI -> API : POST /api/occurrences/:id/transition
+API -> Regras : autorizar e validar transição
+Regras -> DB : atualizar estado + histórico
+API --> UI : 200 + novo estado
+Agente -> UI : emite alerta
+UI -> API : POST /api/occurrences/:id/transition
+API -> Regras : exigir Confirmado
+Regras -> DB : salvar alerta e estado
+Regras -> Avisos : criar avisos internos
+Avisos -> DB : persistir notificações
+API --> UI : 200 + alerta
+Morador -> UI : abre avisos
+UI -> API : GET /api/notifications
+API -> DB : consultar por usuário
+DB --> UI : avisos via API
+@enduml

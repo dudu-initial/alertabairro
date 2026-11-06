@@ -1,0 +1,21 @@
+stateDiagram-v2
+    direction LR
+    [*] --> Registrado: morador envia dados válidos
+    state "Registrado" as Registrado
+    state "Em validação" as Validacao
+    state "Confirmado" as Confirmado
+    state "Alerta emitido" as Alerta
+    state "Em monitoramento" as Monitoramento
+    state "Encerrado" as Encerrado
+    state "Descartado" as Descartado
+
+    Registrado --> Validacao: iniciar análise [agente ou gestor]
+    Registrado --> Descartado: descartar [agente ou gestor; justificativa]
+    Validacao --> Confirmado: confirmar [agente ou gestor; decisão humana]
+    Validacao --> Descartado: descartar [agente ou gestor; justificativa]
+    Confirmado --> Descartado: rever decisão [agente ou gestor; justificativa]
+    Confirmado --> Alerta: emitir alerta [agente ou gestor; mensagem válida]
+    Alerta --> Monitoramento: iniciar acompanhamento [agente ou gestor]
+    Monitoramento --> Encerrado: encerrar [agente ou gestor]
+    Encerrado --> [*]
+    Descartado --> [*]

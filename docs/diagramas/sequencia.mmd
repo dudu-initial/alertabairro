@@ -1,0 +1,51 @@
+sequenceDiagram
+    autonumber
+    actor Morador
+    participant UI as Interface web
+    participant API as API HTTP
+    participant Regras as Aplicação e regras
+    participant DB as SQLite
+    actor Agente
+    participant Avisos as Notificações internas
+
+    Morador->>UI: Preenche e envia ocorrência
+    UI->>API: POST /api/occurrences + Bearer token
+    API->>Regras: Validar campos e perfil
+    alt Dados inválidos
+        Regras-->>API: Erros de validação
+        API-->>UI: 400 e detalhes
+        UI-->>Morador: Exibe correções
+    else Dados válidos
+        Regras->>Regras: Calcular risco e confiança
+        Regras->>DB: Inserir ocorrência em Registrado
+        DB-->>Regras: ID e dados persistidos
+        API-->>UI: 201 e ocorrência
+        UI-->>Morador: Exibe detalhe e estado
+    end
+
+    Agente->>UI: Abre fila e detalhe
+    UI->>API: GET /api/occurrences
+    API->>DB: Consultar ocorrências
+    DB-->>API: Lista e histórico
+    API-->>UI: Ocorrências
+    Agente->>UI: Inicia análise e confirma
+    UI->>API: POST /api/occurrences/:id/transition
+    API->>Regras: Autorizar e verificar transição
+    Regras->>DB: Atualizar estado e registrar histórico
+    DB-->>API: Ocorrência atualizada
+    API-->>UI: 200 e novo estado
+
+    Agente->>UI: Emite alerta com mensagem
+    UI->>API: POST /api/occurrences/:id/transition (Alerta emitido)
+    API->>Regras: Exigir Confirmado e perfil autorizado
+    Regras->>DB: Salvar alerta e estado
+    Regras->>Avisos: Criar notificações internas
+    Avisos->>DB: Persistir notificações
+    API-->>UI: 200 e alerta emitido
+    UI-->>Agente: Exibe confirmação
+    Morador->>UI: Abre Alertas
+    UI->>API: GET /api/notifications
+    API->>DB: Consultar notificações do usuário
+    DB-->>API: Notificações
+    API-->>UI: Lista de avisos
+    UI-->>Morador: Mostra alerta, origem e confiança

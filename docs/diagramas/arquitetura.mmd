@@ -1,0 +1,12 @@
+flowchart TB
+    U[Morador, agente e gestor] --> UI[Apresentação: SPA HTML, CSS e JavaScript]
+    UI -->|HTTP JSON + Bearer token| API[API HTTP Python]
+    API --> A[Aplicação: validação, risco, confiança e estados]
+    API --> AUTH[Autenticação e permissões]
+    A --> EVENTS[Processamento síncrono de transições]
+    EVENTS --> N[Serviço de notificações internas]
+    A --> P[(SQLite: usuários, ocorrências e histórico)]
+    AUTH --> P
+    EVENTS --> P
+    N --> P
+    EXT[Fontes externas: integração futura] -.-> A

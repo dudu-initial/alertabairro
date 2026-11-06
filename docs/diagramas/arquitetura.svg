@@ -1,0 +1,42 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1500" height="850" viewBox="0 0 1500 850" role="img" aria-label="Arquitetura em camadas">
+<defs><marker id="arrow" markerWidth="10" markerHeight="8" refX="8" refY="4" orient="auto"><path d="M0,0 L9,4 L0,8 Z" fill="#087F88"/></marker><marker id="coralArrow" markerWidth="10" markerHeight="8" refX="8" refY="4" orient="auto"><path d="M0,0 L9,4 L0,8 Z" fill="#D46153"/></marker><marker id="grayArrow" markerWidth="10" markerHeight="8" refX="8" refY="4" orient="auto"><path d="M0,0 L9,4 L0,8 Z" fill="#839BAD"/></marker></defs>
+<rect width="1500" height="850" fill="#F7FAFC"/>
+<rect x="0" y="0" width="1500" height="10" fill="#087F88"/>
+<text x="56" y="67" fill="#10263D" font-family="Inter,Segoe UI,Arial,sans-serif" font-size="30" font-weight="750">Arquitetura em camadas</text>
+<text x="57" y="96" fill="#61778A" font-family="Inter,Segoe UI,Arial,sans-serif" font-size="16">Implementação local do protótipo e fronteira explícita das integrações futuras</text>
+<path d="M750 213 L750 260" fill="none" stroke="#087F88" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" marker-end="url(#arrow)"/>
+<path d="M750 360 L750 405" fill="none" stroke="#087F88" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" marker-end="url(#arrow)"/>
+<path d="M750 505 L750 558" fill="none" stroke="#087F88" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" marker-end="url(#arrow)"/>
+<path d="M465 455 L355 455 L355 558" fill="none" stroke="#087F88" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" marker-end="url(#arrow)"/>
+<path d="M1035 455 L1145 455 L1145 558" fill="none" stroke="#087F88" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" marker-end="url(#arrow)"/>
+<path d="M355 658 L355 715 L750 715" fill="none" stroke="#839BAD" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" marker-end="url(#grayArrow)"/>
+<path d="M750 658 L750 715" fill="none" stroke="#839BAD" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" marker-end="url(#grayArrow)"/>
+<path d="M1145 658 L1145 715 L750 715" fill="none" stroke="#839BAD" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" marker-end="url(#grayArrow)"/>
+<rect x="570" y="135" width="360" height="78" rx="17" fill="#10263D" stroke="#10263D" stroke-width="1.5"/>
+<text x="750" y="168" text-anchor="middle" fill="#FFFFFF" font-family="Inter,Segoe UI,Arial,sans-serif" font-size="22" font-weight="750">Usuários</text>
+<text x="750" y="192" text-anchor="middle" fill="#CFDDE8" font-family="Inter,Segoe UI,Arial,sans-serif" font-size="15" font-weight="500">Morador · Agente · Gestor</text>
+<rect x="460" y="260" width="580" height="100" rx="18" fill="#DCF4F2" stroke="#D8E4EC" stroke-width="1.5"/>
+<rect x="460" y="260" width="7" height="100" rx="3.5" fill="#087F88"/>
+<text x="750.0" y="296" text-anchor="middle" fill="#10263D" font-family="Inter,Segoe UI,Arial,sans-serif" font-size="19" font-weight="700">Apresentação</text>
+<text x="750.0" y="322" text-anchor="middle" fill="#61778A" font-family="Inter,Segoe UI,Arial,sans-serif" font-size="13" font-weight="500">SPA HTML · CSS · JavaScript</text>
+<rect x="465" y="405" width="570" height="100" rx="18" fill="#FFFFFF" stroke="#D8E4EC" stroke-width="1.5"/>
+<rect x="465" y="405" width="7" height="100" rx="3.5" fill="#087F88"/>
+<text x="750.0" y="441" text-anchor="middle" fill="#10263D" font-family="Inter,Segoe UI,Arial,sans-serif" font-size="19" font-weight="700">API HTTP e regras de negócio</text>
+<text x="750.0" y="467" text-anchor="middle" fill="#61778A" font-family="Inter,Segoe UI,Arial,sans-serif" font-size="13" font-weight="500">Python · validação · risco · confiança · estados</text>
+<rect x="165" y="558" width="380" height="100" rx="18" fill="#FFFFFF" stroke="#D8E4EC" stroke-width="1.5"/>
+<rect x="165" y="558" width="7" height="100" rx="3.5" fill="#087F88"/>
+<text x="355.0" y="594" text-anchor="middle" fill="#10263D" font-family="Inter,Segoe UI,Arial,sans-serif" font-size="19" font-weight="700">Autenticação</text>
+<text x="355.0" y="620" text-anchor="middle" fill="#61778A" font-family="Inter,Segoe UI,Arial,sans-serif" font-size="13" font-weight="500">Token Bearer · perfis · permissões</text>
+<rect x="560" y="558" width="380" height="100" rx="18" fill="#DCF4F2" stroke="#D8E4EC" stroke-width="1.5"/>
+<rect x="560" y="558" width="7" height="100" rx="3.5" fill="#087F88"/>
+<text x="750.0" y="594" text-anchor="middle" fill="#10263D" font-family="Inter,Segoe UI,Arial,sans-serif" font-size="19" font-weight="700">Eventos e notificações</text>
+<text x="750.0" y="620" text-anchor="middle" fill="#61778A" font-family="Inter,Segoe UI,Arial,sans-serif" font-size="13" font-weight="500">Transições síncronas · avisos internos</text>
+<rect x="955" y="558" width="380" height="100" rx="18" fill="#FCEAE5" stroke="#D8E4EC" stroke-width="1.5"/>
+<rect x="955" y="558" width="7" height="100" rx="3.5" fill="#D46153"/>
+<text x="1145.0" y="594" text-anchor="middle" fill="#10263D" font-family="Inter,Segoe UI,Arial,sans-serif" font-size="19" font-weight="700">Fontes de informação</text>
+<text x="1145.0" y="620" text-anchor="middle" fill="#61778A" font-family="Inter,Segoe UI,Arial,sans-serif" font-size="13" font-weight="500">Catálogo local · sem coleta automática</text>
+<rect x="570" y="715" width="360" height="80" rx="16" fill="#10263D" stroke="#10263D" stroke-width="1.5"/>
+<text x="750" y="749" text-anchor="middle" fill="#FFFFFF" font-family="Inter,Segoe UI,Arial,sans-serif" font-size="21" font-weight="750">SQLite</text>
+<text x="750" y="776" text-anchor="middle" fill="#CFDDE8" font-family="Inter,Segoe UI,Arial,sans-serif" font-size="14" font-weight="500">Dados, histórico, alertas e avisos</text>
+<text x="1327" y="802" text-anchor="end" fill="#61778A" font-family="Inter,Segoe UI,Arial,sans-serif" font-size="13" font-weight="500">Futuro: APIs externas, fila, e-mail, SMS e push</text>
+</svg>

@@ -1,0 +1,1 @@
+"""AlertaBairro automated tests."""

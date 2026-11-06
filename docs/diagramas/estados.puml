@@ -1,0 +1,15 @@
+@startuml
+title AlertaBairro — ciclo de vida da ocorrência
+hide empty description
+[*] --> Registrado : envio válido do morador
+Registrado --> "Em validação" : iniciar análise [agente/gestor]
+Registrado --> Descartado : descartar [agente/gestor; justificativa]
+"Em validação" --> Confirmado : confirmar [agente/gestor; decisão humana]
+"Em validação" --> Descartado : descartar [agente/gestor; justificativa]
+Confirmado --> Descartado : rever decisão [agente/gestor; justificativa]
+Confirmado --> "Alerta emitido" : emitir alerta [agente/gestor; mensagem válida]
+"Alerta emitido" --> "Em monitoramento" : iniciar acompanhamento [agente/gestor]
+"Em monitoramento" --> Encerrado : encerrar [agente/gestor]
+Encerrado --> [*]
+Descartado --> [*]
+@enduml

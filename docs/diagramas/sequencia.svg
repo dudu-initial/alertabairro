@@ -1,0 +1,65 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1660" height="1100" viewBox="0 0 1660 1100" role="img" aria-label="Do relato ao alerta">
+<defs><marker id="arrow" markerWidth="10" markerHeight="8" refX="8" refY="4" orient="auto"><path d="M0,0 L9,4 L0,8 Z" fill="#087F88"/></marker><marker id="coralArrow" markerWidth="10" markerHeight="8" refX="8" refY="4" orient="auto"><path d="M0,0 L9,4 L0,8 Z" fill="#D46153"/></marker><marker id="grayArrow" markerWidth="10" markerHeight="8" refX="8" refY="4" orient="auto"><path d="M0,0 L9,4 L0,8 Z" fill="#839BAD"/></marker></defs>
+<rect width="1660" height="1100" fill="#F7FAFC"/>
+<rect x="0" y="0" width="1660" height="10" fill="#087F88"/>
+<text x="56" y="67" fill="#10263D" font-family="Inter,Segoe UI,Arial,sans-serif" font-size="30" font-weight="750">Do relato ao alerta</text>
+<text x="57" y="96" fill="#61778A" font-family="Inter,Segoe UI,Arial,sans-serif" font-size="16">Diagrama de sequência resumido do fluxo principal; erros de validação retornam 400</text>
+<rect x="18" y="120" width="164" height="52" rx="11" fill="#FFFFFF" stroke="#C8D8E3" stroke-width="1.5"/>
+<text x="100" y="152" text-anchor="middle" fill="#10263D" font-family="Inter,Segoe UI,Arial,sans-serif" font-size="16" font-weight="700">Morador</text>
+<path d="M100 172 L100 1020" fill="none" stroke="#B9CBD9" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="7 6"/>
+<rect x="248" y="120" width="164" height="52" rx="11" fill="#DCF4F2" stroke="#C8D8E3" stroke-width="1.5"/>
+<text x="330" y="152" text-anchor="middle" fill="#10263D" font-family="Inter,Segoe UI,Arial,sans-serif" font-size="16" font-weight="700">Interface</text>
+<path d="M330 172 L330 1020" fill="none" stroke="#B9CBD9" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="7 6"/>
+<rect x="478" y="120" width="164" height="52" rx="11" fill="#FFFFFF" stroke="#C8D8E3" stroke-width="1.5"/>
+<text x="560" y="152" text-anchor="middle" fill="#10263D" font-family="Inter,Segoe UI,Arial,sans-serif" font-size="16" font-weight="700">API</text>
+<path d="M560 172 L560 1020" fill="none" stroke="#B9CBD9" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="7 6"/>
+<rect x="718" y="120" width="164" height="52" rx="11" fill="#DCF4F2" stroke="#C8D8E3" stroke-width="1.5"/>
+<text x="800" y="152" text-anchor="middle" fill="#10263D" font-family="Inter,Segoe UI,Arial,sans-serif" font-size="16" font-weight="700">Regras</text>
+<path d="M800 172 L800 1020" fill="none" stroke="#B9CBD9" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="7 6"/>
+<rect x="958" y="120" width="164" height="52" rx="11" fill="#FFFFFF" stroke="#C8D8E3" stroke-width="1.5"/>
+<text x="1040" y="152" text-anchor="middle" fill="#10263D" font-family="Inter,Segoe UI,Arial,sans-serif" font-size="16" font-weight="700">SQLite</text>
+<path d="M1040 172 L1040 1020" fill="none" stroke="#B9CBD9" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="7 6"/>
+<rect x="1188" y="120" width="164" height="52" rx="11" fill="#FFFFFF" stroke="#C8D8E3" stroke-width="1.5"/>
+<text x="1270" y="152" text-anchor="middle" fill="#10263D" font-family="Inter,Segoe UI,Arial,sans-serif" font-size="16" font-weight="700">Agente</text>
+<path d="M1270 172 L1270 1020" fill="none" stroke="#B9CBD9" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="7 6"/>
+<rect x="1438" y="120" width="164" height="52" rx="11" fill="#FFFFFF" stroke="#C8D8E3" stroke-width="1.5"/>
+<text x="1520" y="152" text-anchor="middle" fill="#10263D" font-family="Inter,Segoe UI,Arial,sans-serif" font-size="16" font-weight="700">Notificações</text>
+<path d="M1520 172 L1520 1020" fill="none" stroke="#B9CBD9" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="7 6"/>
+<rect x="30" y="197" width="1600" height="35" rx="8" fill="#ECF2F8" stroke="#ECF2F8" stroke-width="1.5"/>
+<text x="48" y="220" text-anchor="start" fill="#087F88" font-family="Inter,Segoe UI,Arial,sans-serif" font-size="14" font-weight="700">1  REGISTRO COMUNITÁRIO</text>
+<path d="M100 266 L318 266" fill="none" stroke="#087F88" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" marker-end="url(#arrow)"/>
+<text x="215.0" y="258" text-anchor="middle" fill="#17324A" font-family="Inter,Segoe UI,Arial,sans-serif" font-size="13" font-weight="600">1. Envia ocorrência</text>
+<path d="M330 310 L548 310" fill="none" stroke="#087F88" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" marker-end="url(#arrow)"/>
+<text x="445.0" y="302" text-anchor="middle" fill="#17324A" font-family="Inter,Segoe UI,Arial,sans-serif" font-size="13" font-weight="600">2. POST /api/occurrences</text>
+<path d="M560 354 L788 354" fill="none" stroke="#087F88" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" marker-end="url(#arrow)"/>
+<text x="680.0" y="346" text-anchor="middle" fill="#17324A" font-family="Inter,Segoe UI,Arial,sans-serif" font-size="13" font-weight="600">3. Valida entrada e perfil</text>
+<path d="M800 398 L1028 398" fill="none" stroke="#087F88" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" marker-end="url(#arrow)"/>
+<text x="920.0" y="390" text-anchor="middle" fill="#17324A" font-family="Inter,Segoe UI,Arial,sans-serif" font-size="13" font-weight="600">4. Calcula e persiste</text>
+<path d="M1040 442 L572 442" fill="none" stroke="#087F88" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" marker-end="url(#arrow)"/>
+<text x="800.0" y="434" text-anchor="middle" fill="#17324A" font-family="Inter,Segoe UI,Arial,sans-serif" font-size="13" font-weight="600">5. Retorna registro</text>
+<path d="M560 486 L342 486" fill="none" stroke="#087F88" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" marker-end="url(#arrow)"/>
+<text x="445.0" y="478" text-anchor="middle" fill="#17324A" font-family="Inter,Segoe UI,Arial,sans-serif" font-size="13" font-weight="600">6. 201 + ocorrência</text>
+<rect x="30" y="518" width="1600" height="35" rx="8" fill="#ECF2F8" stroke="#ECF2F8" stroke-width="1.5"/>
+<text x="48" y="541" text-anchor="start" fill="#087F88" font-family="Inter,Segoe UI,Arial,sans-serif" font-size="14" font-weight="700">2  VALIDAÇÃO PELO AGENTE</text>
+<path d="M1270 587 L342 587" fill="none" stroke="#087F88" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" marker-end="url(#arrow)"/>
+<text x="800.0" y="579" text-anchor="middle" fill="#17324A" font-family="Inter,Segoe UI,Arial,sans-serif" font-size="13" font-weight="600">7. Consulta fila e detalhe</text>
+<path d="M330 631 L548 631" fill="none" stroke="#087F88" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" marker-end="url(#arrow)"/>
+<text x="445.0" y="623" text-anchor="middle" fill="#17324A" font-family="Inter,Segoe UI,Arial,sans-serif" font-size="13" font-weight="600">8. GET /api/occurrences</text>
+<path d="M1270 675 L342 675" fill="none" stroke="#087F88" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" marker-end="url(#arrow)"/>
+<text x="800.0" y="667" text-anchor="middle" fill="#17324A" font-family="Inter,Segoe UI,Arial,sans-serif" font-size="13" font-weight="600">9. Inicia e confirma</text>
+<path d="M330 719 L548 719" fill="none" stroke="#087F88" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" marker-end="url(#arrow)"/>
+<text x="445.0" y="711" text-anchor="middle" fill="#17324A" font-family="Inter,Segoe UI,Arial,sans-serif" font-size="13" font-weight="600">10. POST /transition</text>
+<path d="M560 763 L788 763" fill="none" stroke="#087F88" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" marker-end="url(#arrow)"/>
+<text x="680.0" y="755" text-anchor="middle" fill="#17324A" font-family="Inter,Segoe UI,Arial,sans-serif" font-size="13" font-weight="600">11. Autoriza a transição</text>
+<path d="M800 807 L1028 807" fill="none" stroke="#087F88" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" marker-end="url(#arrow)"/>
+<text x="920.0" y="799" text-anchor="middle" fill="#17324A" font-family="Inter,Segoe UI,Arial,sans-serif" font-size="13" font-weight="600">12. Estado + histórico</text>
+<rect x="30" y="835" width="1600" height="35" rx="8" fill="#FCEAE5" stroke="#FCEAE5" stroke-width="1.5"/>
+<text x="48" y="858" text-anchor="start" fill="#D46153" font-family="Inter,Segoe UI,Arial,sans-serif" font-size="14" font-weight="700">3  EMISSÃO E NOTIFICAÇÃO</text>
+<path d="M1270 901 L342 901" fill="none" stroke="#D46153" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" marker-end="url(#coralArrow)"/>
+<text x="800.0" y="893" text-anchor="middle" fill="#17324A" font-family="Inter,Segoe UI,Arial,sans-serif" font-size="13" font-weight="600">13. Solicita alerta</text>
+<path d="M330 945 L548 945" fill="none" stroke="#D46153" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" marker-end="url(#coralArrow)"/>
+<text x="445.0" y="937" text-anchor="middle" fill="#17324A" font-family="Inter,Segoe UI,Arial,sans-serif" font-size="13" font-weight="600">14. POST /transition</text>
+<path d="M800 989 L1508 989" fill="none" stroke="#D46153" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" marker-end="url(#coralArrow)"/>
+<text x="1160.0" y="981" text-anchor="middle" fill="#17324A" font-family="Inter,Segoe UI,Arial,sans-serif" font-size="13" font-weight="600">15. Cria avisos internos</text>
+<text x="830" y="1060" text-anchor="middle" fill="#61778A" font-family="Inter,Segoe UI,Arial,sans-serif" font-size="15" font-weight="600">O morador consulta os avisos em GET /api/notifications.</text>
+</svg>
