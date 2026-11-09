@@ -92,7 +92,7 @@
   }
   function loginPage() {
     document.title='Entrar · AlertaBairro';
-    root.innerHTML=`<div class="login"><div class="login-wrap"><div class="login-brand"><span class="brand-mark">${icon('activity',22)}</span>AlertaBairro</div><section class="login-card"><div class="kicker">Comunidade mais informada</div><h1>Bem-vindo ao seu bairro.</h1><p>Veja alertas, registre o que acontece e acompanhe as respostas em um só lugar.</p><form id="login-form" class="login-form"><div class="field"><label for="login-email">E-mail</label><input id="login-email" name="email" type="email" autocomplete="username" required placeholder="voce@exemplo.com"></div><div class="field"><label for="login-password">Senha</label><input id="login-password" name="password" type="password" autocomplete="current-password" required placeholder="Sua senha"></div><div id="login-error"></div><button class="btn btn-primary btn-large btn-block" type="submit">Entrar ${icon('arrow',18)}</button></form><button type="button" class="btn btn-secondary btn-block" style="margin-top:16px" data-action="register-account">Criar minha conta</button><div class="demo-title">Explorar com conta de demonstração</div><div class="demo-grid"><button data-demo="morador">Morador</button><button data-demo="agente">Agente</button><button data-demo="gestor">Gestor</button></div></section><p class="login-foot">Protótipo acadêmico · Global Solution FIAP 2026.2</p></div></div>`;
+    root.innerHTML=`<div class="login"><div class="login-wrap"><div class="login-brand"><span class="brand-mark">${icon('activity',22)}</span>AlertaBairro</div><section class="login-card"><div class="kicker">Comunidade mais informada</div><h1>Bem-vindo ao seu bairro.</h1><p>Veja alertas, registre o que acontece e acompanhe as respostas em um só lugar.</p><div class="btn-row" style="margin-top:20px"><a href="#entrar" class="btn btn-quiet" aria-current="page">Entrar</a><a href="#cadastro" class="btn btn-primary">Criar conta</a></div><form id="login-form" class="login-form"><div class="field"><label for="login-email">E-mail</label><input id="login-email" name="email" type="email" autocomplete="username" required placeholder="voce@exemplo.com"></div><div class="field"><label for="login-password">Senha</label><input id="login-password" name="password" type="password" autocomplete="current-password" required placeholder="Sua senha"></div><div id="login-error"></div><button class="btn btn-primary btn-large btn-block" type="submit">Entrar ${icon('arrow',18)}</button></form><button type="button" class="btn btn-secondary btn-block" style="margin-top:16px" data-action="register-account">Criar minha conta</button><div class="demo-title">Explorar com conta de demonstração</div><div class="demo-grid"><button data-demo="morador">Morador</button><button data-demo="agente">Agente</button><button data-demo="gestor">Gestor</button></div></section><p class="login-foot">Protótipo acadêmico · Global Solution FIAP 2026.2</p></div></div>`;
   }
   function registrationPage() {
     root.innerHTML=`<div class="login"><div class="login-wrap"><section class="login-card"><div class="kicker">AlertaBairro</div><h1>Crie sua conta</h1><p>Cadastre-se como morador para registrar e acompanhar ocorrências.</p><form id="registration-form" class="login-form"><div class="field"><label for="reg-name">Seu nome</label><input id="reg-name" name="name" autocomplete="name" required minlength="2" maxlength="100"></div><div class="field"><label for="reg-email">E-mail</label><input id="reg-email" name="email" type="email" autocomplete="email" required maxlength="254"></div><div class="field"><label for="reg-password">Senha</label><input id="reg-password" name="password" type="password" autocomplete="new-password" required minlength="8" maxlength="128"><small>Use pelo menos 8 caracteres.</small></div><div class="field"><label for="reg-confirm">Repita a senha</label><input id="reg-confirm" name="confirm" type="password" autocomplete="new-password" required minlength="8" maxlength="128"></div><div id="registration-error" role="alert"></div><button class="btn btn-primary btn-large" type="submit">Criar conta</button><button class="btn btn-secondary" type="button" data-action="back-login">Já tenho uma conta</button></form></section></div></div>`;
@@ -104,7 +104,7 @@
     const button=form.querySelector('[type="submit"]');button.disabled=true;button.textContent='Criando conta…';
     try {
       await api('/api/auth/register',{method:'POST',body:JSON.stringify({name:values.name,email:values.email,password:values.password})});
-      loginPage();root.querySelector('#login-email').value=values.email;
+      history.replaceState(null,'','#entrar');loginPage();root.querySelector('#login-email').value=values.email;
       toast('Conta criada! Entre com seu e-mail e senha.','success');
     } catch(err){error.textContent=err.message;button.disabled=false;button.textContent='Criar conta';}
   }
@@ -214,7 +214,7 @@
       const data=await api('/api/auth/login',{method:'POST',body:JSON.stringify({email,password})});
       S.token=data.token;S.user=data.user;localStorage.setItem('ab_token',S.token);
       try{S.meta=await api('/api/meta');}catch{S.meta=null;}
-      await syncNotices();render();toast(`Bem-vindo, ${firstName(S.user.name)}!`,'success');
+      await syncNotices();navigate('inicio');toast(`Bem-vindo, ${firstName(S.user.name)}!`,'success');
     } catch(err) {
       const target=root.querySelector('#login-error');if(target)target.innerHTML=`<div class="form-error">${esc(err.message)}</div>`;
       if(button){button.disabled=false;button.innerHTML=`Entrar ${icon('arrow',18)}`;}
@@ -253,8 +253,8 @@
   document.addEventListener('click',async event=>{
     const action=event.target.closest('[data-action]')?.dataset.action;
     if(['more','notices','profile'].includes(action)){setPopover(action);return;}
-    if(action==='register-account'){registrationPage();return;}
-    if(action==='back-login'){loginPage();return;}
+    if(action==='register-account'){navigate('cadastro');return;}
+    if(action==='back-login'){navigate('entrar');return;}
     if(action==='logout'){await logout();return;}
     if(action==='retry'){render();return;}
     if(action==='report-back'){const form=root.querySelector('#report-form');if(form)captureReport(form);S.reportStep=Math.max(1,S.reportStep-1);render();return;}
@@ -272,8 +272,9 @@
     if((event.key==='Enter'||event.key===' ')&&event.target.matches('[data-notice]')){event.preventDefault();event.target.click();}
     if(event.key==='Escape'){root.querySelector('#active-popover')?.remove();S.menu='';}
   });
-  window.addEventListener('hashchange',()=>{if(S.user)render();});
+  window.addEventListener('hashchange',()=>{if(location.hash==='#cadastro'){registrationPage();return;}if(location.hash==='#entrar'){loginPage();return;}if(S.user)render();else loginPage();});
   async function init() {
+    if(location.hash==='#cadastro'){registrationPage();return;}
     if(!S.token){loginPage();return;}
     root.innerHTML=loading();
     try { const data=await api('/api/auth/me');S.user=data.user;try{S.meta=await api('/api/meta');}catch{S.meta=null;}await syncNotices();render(); }
