@@ -1,406 +1,266 @@
 (() => {
   'use strict';
-
   const root = document.getElementById('app');
   const toastHost = document.getElementById('toast-host');
-  const demoPassword = 'Demo@2026';
-  const state = {
-    token: localStorage.getItem('ab_token') || '',
-    user: null,
-    meta: null,
-    notifications: [],
-    unread: 0,
-    routeRun: 0,
-    filter: { search: '', status: '', risk: '' },
-    page: 1,
-    navOpen: false,
-    menuOpen: false,
-    notificationsOpen: false,
-    transitionTo: ''
+  const S = {
+    token: localStorage.getItem('ab_token') || '', user: null, meta: null,
+    neighborhood: localStorage.getItem('ab_neighborhood') || '',
+    notices: [], unread: 0, menu: '', renderId: 0,
+    alertTab: 'active', search: '', reportStep: 1, report: {}, transitionTo: ''
   };
-
-  const iconPaths = {
-    activity: '<polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/>',
-    alert: '<path d="M10.3 3.4 2.6 17a2 2 0 0 0 1.7 3h15.4a2 2 0 0 0 1.7-3L13.7 3.4a2 2 0 0 0-3.4 0Z"/><path d="M12 9v4"/><path d="M12 17h.01"/>',
-    arrow: '<path d="M5 12h14"/><path d="m13 6 6 6-6 6"/>',
-    bell: '<path d="M18 8a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9"/><path d="M10 21h4"/>',
-    check: '<path d="m20 6-11 11-5-5"/>',
-    chevron: '<path d="m9 18 6-6-6-6"/>',
-    close: '<path d="M18 6 6 18M6 6l12 12"/>',
-    compass: '<circle cx="12" cy="12" r="10"/><path d="m16.2 7.8-2.3 6.1-6.1 2.3 2.3-6.1 6.1-2.3Z"/>',
-    database: '<ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M3 5v14c0 1.7 4 3 9 3s9-1.3 9-3V5"/><path d="M3 12c0 1.7 4 3 9 3s9-1.3 9-3"/>',
-    file: '<path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8Z"/><path d="M14 2v6h6"/><path d="M8 13h8M8 17h8"/>',
-    filter: '<path d="M4 7h16M7 12h10M10 17h4"/>',
-    flag: '<path d="M4 22V4"/><path d="M4 4c4-3 8 3 12 0v11c-4 3-8-3-12 0"/>',
-    heart: '<path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.7l-1.1-1.1a5.5 5.5 0 0 0-7.8 7.8L12 21l8.8-8.6a5.5 5.5 0 0 0 0-7.8Z"/>',
-    help: '<circle cx="12" cy="12" r="10"/><path d="M9.8 9a2.3 2.3 0 1 1 3.7 1.9c-1 .8-1.5 1.2-1.5 2.6"/><path d="M12 17h.01"/>',
-    home: '<path d="m3 10 9-7 9 7v10a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V10Z"/><path d="M9 21v-7h6v7"/>',
-    layers: '<path d="m12 2 9 5-9 5-9-5 9-5Z"/><path d="m3 12 9 5 9-5M3 17l9 5 9-5"/>',
-    location: '<path d="M20 10c0 5-8 12-8 12S4 15 4 10a8 8 0 1 1 16 0Z"/><circle cx="12" cy="10" r="2.5"/>',
-    lock: '<rect x="4" y="10" width="16" height="12" rx="2"/><path d="M8 10V6a4 4 0 0 1 8 0v4"/>',
-    logout: '<path d="M10 17l5-5-5-5M15 12H3"/><path d="M12 3h7a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-7"/>',
-    map: '<path d="m3 6 6-3 6 3 6-3v15l-6 3-6-3-6 3V6Z"/><path d="M9 3v15M15 6v15"/>',
-    menu: '<path d="M4 6h16M4 12h16M4 18h16"/>',
-    message: '<path d="M21 11.5a8.5 8.5 0 0 1-8.5 8.5 9 9 0 0 1-4-.9L3 21l1.9-5.5a9 9 0 0 1-.9-4A8.5 8.5 0 0 1 12.5 3a8.5 8.5 0 0 1 8.5 8.5Z"/>',
-    plus: '<path d="M12 5v14M5 12h14"/>',
-    refresh: '<path d="M20 7v5h-5"/><path d="M4 17v-5h5"/><path d="M5.6 9a7 7 0 0 1 12-2L20 12M4 12l2.4 5a7 7 0 0 0 12-2"/>',
-    search: '<circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/>',
-    shield: '<path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10Z"/><path d="m9 12 2 2 4-4"/>',
-    target: '<circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="5"/><circle cx="12" cy="12" r="1"/>',
-    trend: '<path d="m3 17 6-6 4 4 8-8"/><path d="M15 7h6v6"/>',
-    users: '<path d="M16 21v-2a4 4 0 0 0-4-4H4a4 4 0 0 0-4 4v2"/><circle cx="8" cy="7" r="4"/><path d="M20 21v-2a4 4 0 0 0-3-3.9M16 3.1a4 4 0 0 1 0 7.8"/>',
-    wifi: '<path d="M2 8a15 15 0 0 1 20 0M5 12a10 10 0 0 1 14 0M9 16a4 4 0 0 1 6 0"/><circle cx="12" cy="20" r="1"/>'
+  const paths = {
+    home:'<path d="m3 10 9-7 9 7v10a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V10Z"/><path d="M9 21v-7h6v7"/>',
+    bell:'<path d="M18 8a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9"/><path d="M10 21h4"/>',
+    plus:'<path d="M12 5v14M5 12h14"/>',
+    list:'<path d="M8 6h13M8 12h13M8 18h13"/><path d="M3 6h.01M3 12h.01M3 18h.01"/>',
+    menu:'<path d="M4 6h16M4 12h16M4 18h16"/>',
+    arrow:'<path d="M5 12h14m-6-6 6 6-6 6"/>',
+    back:'<path d="M19 12H5m6 6-6-6 6-6"/>',
+    chevron:'<path d="m9 18 6-6-6-6"/>',
+    pin:'<path d="M20 10c0 5-8 12-8 12S4 15 4 10a8 8 0 1 1 16 0Z"/><circle cx="12" cy="10" r="2.5"/>',
+    map:'<path d="m3 6 6-3 6 3 6-3v15l-6 3-6-3-6 3V6Z"/><path d="M9 3v15M15 6v15"/>',
+    shield:'<path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10Z"/><path d="m9 12 2 2 4-4"/>',
+    check:'<path d="m20 6-11 11-5-5"/>',
+    close:'<path d="M18 6 6 18M6 6l12 12"/>',
+    activity:'<polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/>',
+    layers:'<path d="m12 2 9 5-9 5-9-5 9-5Z"/><path d="m3 12 9 5 9-5M3 17l9 5 9-5"/>',
+    users:'<path d="M16 21v-2a4 4 0 0 0-4-4H4a4 4 0 0 0-4 4v2"/><circle cx="8" cy="7" r="4"/><path d="M20 21v-2a4 4 0 0 0-3-3.9M16 3.1a4 4 0 0 1 0 7.8"/>',
+    logout:'<path d="M10 17l5-5-5-5M15 12H3"/><path d="M12 3h7a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-7"/>',
+    search:'<circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/>',
+    info:'<circle cx="12" cy="12" r="10"/><path d="M12 11v6M12 7h.01"/>',
+    clock:'<circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/>',
+    alert:'<path d="M10.3 3.4 2.6 17a2 2 0 0 0 1.7 3h15.4a2 2 0 0 0 1.7-3L13.7 3.4a2 2 0 0 0-3.4 0Z"/><path d="M12 9v4M12 17h.01"/>'
   };
-  const icon = (name, size = 18) => `<svg width="${size}" height="${size}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${iconPaths[name] || iconPaths.activity}</svg>`;
-  const e = value => String(value ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-  const n = value => Number(value) || 0;
-  const formatDate = value => {
-    if (!value) return 'Data não informada';
-    const d = new Date(String(value).replace(' ', 'T') + (String(value).includes('Z') || String(value).includes('+') ? '' : 'Z'));
-    return Number.isNaN(d.getTime()) ? e(String(value).slice(0, 16)) : new Intl.DateTimeFormat('pt-BR', { day: '2-digit', month: 'short', year: 'numeric' }).format(d);
+  const icon = (name, size=18) => `<svg width="${size}" height="${size}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${paths[name] || paths.info}</svg>`;
+  const esc = v => String(v ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+  const num = v => Number(v) || 0;
+  const date = v => {
+    if (!v) return 'Data não informada';
+    const text = String(v).replace(' ','T');
+    const parsed = new Date(text + (text.endsWith('Z') || /[+-]\d\d:\d\d$/.test(text) ? '' : 'Z'));
+    return Number.isNaN(parsed.getTime()) ? esc(text.slice(0,16)) : new Intl.DateTimeFormat('pt-BR',{day:'2-digit',month:'short',year:'numeric'}).format(parsed);
   };
-  const formatDateTime = value => {
-    if (!value) return 'Data não informada';
-    const d = new Date(String(value).replace(' ', 'T') + (String(value).includes('Z') || String(value).includes('+') ? '' : 'Z'));
-    return Number.isNaN(d.getTime()) ? e(String(value).slice(0, 16)) : new Intl.DateTimeFormat('pt-BR', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' }).format(d);
+  const dateTime = v => {
+    if (!v) return 'Data não informada';
+    const text = String(v).replace(' ','T');
+    const parsed = new Date(text + (text.endsWith('Z') || /[+-]\d\d:\d\d$/.test(text) ? '' : 'Z'));
+    return Number.isNaN(parsed.getTime()) ? esc(text.slice(0,16)) : new Intl.DateTimeFormat('pt-BR',{day:'2-digit',month:'short',hour:'2-digit',minute:'2-digit'}).format(parsed);
   };
-  const statusClass = status => status === 'Confirmado' ? 'confirmed' : status === 'Alerta emitido' ? 'alert' : ['Encerrado','Descartado'].includes(status) ? 'closed' : 'pending';
-  const riskClass = risk => ({'Crítico':'critical','Alto':'high','Moderado':'moderate','Baixo':'low'})[risk] || 'low';
-  const riskBadge = risk => `<span class="risk-badge risk-${riskClass(risk)}">${e(risk || 'Pendente')}</span>`;
-  const statusBadge = status => `<span class="status-badge ${statusClass(status)}">${e(status || 'Registrado')}</span>`;
-  const sourceBadge = source => `<span class="source-badge">${icon('layers', 12)} ${e(source || 'Comunidade')}</span>`;
-  const confidence = value => `${Math.round(n(value))}%`;
-  const idLabel = id => `#${String(id).padStart(4, '0')}`;
-  const roleName = role => ({morador:'Morador',agente:'Agente de validação',gestor:'Gestor'})[role] || role || 'Visitante';
+  const statusLabel = s => ({'Registrado':'Recebido','Em validação':'Em análise','Confirmado':'Confirmado','Alerta emitido':'Alerta enviado','Em monitoramento':'Em acompanhamento','Encerrado':'Resolvido','Descartado':'Não confirmado'})[s] || s || 'Recebido';
+  const statusTone = s => ({'Registrado':'pending','Em validação':'pending','Confirmado':'active','Alerta emitido':'alert','Em monitoramento':'active','Encerrado':'closed','Descartado':'discarded'})[s] || '';
+  const pill = s => `<span class="pill ${statusTone(s)}" title="Estado técnico: ${esc(s)}">${esc(statusLabel(s))}</span>`;
+  const roleLabel = role => ({morador:'Morador',agente:'Agente',gestor:'Gestor'})[role] || 'Usuário';
   const initials = name => String(name || 'AB').split(/\s+/).slice(0,2).map(w => w[0]).join('').toUpperCase();
-  const routeName = route => ({dashboard:'Visão geral',mapa:'Mapa',ocorrencias:'Ocorrências',registrar:'Registrar ocorrência',detalhe:'Detalhe da ocorrência',validacao:'Validação',alertas:'Alertas',monitoramento:'Monitoramento',fontes:'Origem & confiança',administracao:'Administração'})[route] || 'Visão geral';
-  const route = () => (location.hash || '#dashboard').slice(1).split('/')[0] || 'dashboard';
+  const firstName = name => String(name || 'vizinho').split(/\s+/)[0];
+  const isStaff = () => ['agente','gestor'].includes(S.user?.role);
+  const activeStatuses = ['Alerta emitido','Em monitoramento'];
+  const legacy = { dashboard:'inicio', validacao:'fila' };
+  const route = () => legacy[(location.hash || '#inicio').slice(1).split('/')[0]] || (location.hash || '#inicio').slice(1).split('/')[0] || 'inicio';
   const routeId = () => (location.hash || '').slice(1).split('/')[1] || '';
-  const nav = [
-    {group:'Visão operacional',items:[['dashboard','home','Visão geral'],['mapa','map','Mapa de ocorrências'],['ocorrencias','layers','Ocorrências'],['registrar','plus','Registrar ocorrência']]},
-    {group:'Gestão de alertas',items:[['validacao','shield','Fila de validação'],['alertas','bell','Alertas emitidos'],['monitoramento','activity','Monitoramento']]},
-    {group:'Transparência',items:[['fontes','target','Origem & confiança'],['administracao','users','Administração']]}
-  ];
-
-  async function api(path, options = {}) {
-    const headers = { Accept: 'application/json', ...options.headers };
-    if (options.body !== undefined) headers['Content-Type'] = 'application/json';
-    if (state.token) headers.Authorization = `Bearer ${state.token}`;
+  const navigate = dest => { const target=`#${dest}`; if(location.hash===target) render(); else location.hash=target; };
+  const loading = () => `<div class="loading"><div><div class="spinner"></div>Carregando…</div></div>`;
+  function toast(message,type='') { const el=document.createElement('div'); el.className=`toast ${type}`; el.textContent=message; toastHost.append(el); setTimeout(()=>el.remove(),4300); }
+  function empty(title,description,action='') { return `<div class="card"><div class="empty"><div class="empty-icon">${icon('check',22)}</div><h3>${esc(title)}</h3><p>${esc(description)}</p>${action}</div></div>`; }
+  function errorCard(message) { return `<div class="card error-card"><div class="empty"><div class="empty-icon">${icon('alert',22)}</div><h3>Não foi possível carregar</h3><p>${esc(message)}</p><button class="btn btn-secondary" data-action="retry">Tentar novamente</button></div></div>`; }
+  function pageHead(kicker,title,description,action='') { return `<div class="page-head page-head-row"><div><div class="kicker">${esc(kicker)}</div><h1>${esc(title)}</h1><p>${esc(description)}</p></div>${action?`<div class="actions">${action}</div>`:''}</div>`; }
+  async function api(path,options={}) {
+    const headers={Accept:'application/json',...options.headers};
+    if(options.body!==undefined) headers['Content-Type']='application/json';
+    if(S.token) headers.Authorization=`Bearer ${S.token}`;
     let response;
-    try { response = await fetch(path, { ...options, headers }); }
+    try { response=await fetch(path,{...options,headers}); }
     catch { throw new Error('Sem conexão com a API. Verifique se o servidor está em execução.'); }
-    let data;
-    try { data = await response.json(); } catch { data = {}; }
-    if (!response.ok) {
-      if (response.status === 401 && path !== '/api/auth/login') { logout(false); throw new Error('Sua sessão expirou. Entre novamente.'); }
+    let data={}; try { data=await response.json(); } catch { /* Empty response. */ }
+    if(!response.ok) {
+      if(response.status===401 && path!=='/api/auth/login') { clearSession(); throw new Error('Sua sessão expirou. Entre novamente.'); }
       throw new Error(data.error || data.message || `Falha na solicitação (${response.status}).`);
     }
     return data;
   }
-  function toast(message, type = '') {
-    const el = document.createElement('div'); el.className = `toast ${type}`; el.textContent = message;
-    toastHost.append(el); setTimeout(() => el.remove(), 4200);
-  }
-  function navigate(destination) { const target = `#${destination}`; if (location.hash === target) render(); else location.hash = target; }
-  function logout(showToast = true) {
-    state.token = ''; state.user = null; localStorage.removeItem('ab_token');
-    renderLogin(); if (showToast) toast('Você saiu da conta.');
-  }
-  const loading = () => `<div class="loading"><div><div class="spinner"></div>Carregando informações…</div></div>`;
-  function errorPanel(message, retry = true) { return `<div class="panel"><div class="empty"><span class="empty-icon">${icon('alert',22)}</span><h3>Não foi possível carregar esta tela</h3><p>${e(message)}</p>${retry ? '<button class="btn btn-outline" data-action="retry">Tentar novamente</button>' : ''}</div></div>`; }
-  function emptyPanel(title, description, action = '') { return `<div class="panel"><div class="empty"><span class="empty-icon">${icon('layers',22)}</span><h3>${e(title)}</h3><p>${e(description)}</p>${action}</div></div>`; }
-
+  function clearSession() { S.token='';S.user=null;localStorage.removeItem('ab_token');loginPage(); }
+  async function logout() { try { await api('/api/auth/logout',{method:'POST',body:'{}'}); } catch { /* Local logout still completes. */ } clearSession(); toast('Você saiu da conta.'); }
+  async function syncNotices() { if(!S.user)return;try{const data=await api('/api/notifications');S.notices=data.items||[];S.unread=num(data.unread);const bell=root.querySelector('[data-action="notices"]');if(bell)bell.innerHTML=`${icon('bell',19)}${S.unread?'<i class="dot"></i>':''}`;}catch{/* Main screen remains available. */} }
+  async function getAllOccurrences() { const items=[];let page=1,total=0;do{const data=await api(`/api/occurrences?limit=100&page=${page}`);items.push(...(data.items||[]));total=num(data.total);page++;if(!(data.items||[]).length)break;}while(items.length<total&&page<=100);return items; }
+  function noticePopover() { return `<div class="popover" id="active-popover"><div class="popover-title">Notificações${S.unread?` · ${S.unread} nova${S.unread===1?'':'s'}`:''}</div>${S.notices.length?S.notices.slice(0,10).map(item=>`<div class="notice-item ${item.is_read?'':'unread'}" data-notice="${esc(item.id)}" role="button" tabindex="0"><span class="notice-icon">${icon('bell',17)}</span><span><strong>${esc(item.title||'Alerta do bairro')}</strong><p>${esc(item.body||'')}</p><small>${dateTime(item.created_at)}</small></span></div>`).join(''):`<div class="empty"><p>Nenhuma notificação por enquanto.</p></div>`}<a class="menu-item" href="#alertas">${icon('bell',17)} Ver todos os alertas</a></div>`; }
+  function morePopover() { return `<div class="popover" id="active-popover"><div class="menu-caption">Explorar</div><a class="menu-item" href="#ocorrencias">${icon('list',18)} Todas as ocorrências</a><a class="menu-item" href="#mapa">${icon('map',18)} Mapa por bairro</a><a class="menu-item" href="#fontes">${icon('info',18)} Origem e confiança</a>${isStaff()?`<div class="menu-divider"></div><div class="menu-caption">Área do agente</div><a class="menu-item" href="#fila">${icon('shield',18)} Fila de análise</a><a class="menu-item" href="#monitoramento">${icon('activity',18)} Monitoramento</a>${S.user.role==='gestor'?`<a class="menu-item" href="#administracao">${icon('users',18)} Administração</a>`:''}`:''}</div>`; }
+  function profilePopover() { return `<div class="popover" id="active-popover"><div class="popover-title">${esc(S.user?.name)}<small style="display:block;color:#8ba19e;font-weight:500">${esc(roleLabel(S.user?.role))} · conta local</small></div><button class="menu-item" data-action="logout">${icon('logout',18)} Sair da conta</button></div>`; }
+  function setPopover(type) { root.querySelector('#active-popover')?.remove();S.menu=S.menu===type?'':type;if(S.menu){const html=type==='more'?morePopover():type==='notices'?noticePopover():profilePopover();root.querySelector('.header')?.insertAdjacentHTML('beforeend',html);}root.querySelectorAll('[data-action="more"],[data-action="notices"],[data-action="profile"]').forEach(el=>el.setAttribute('aria-expanded',String(el.dataset.action===S.menu))); }
   function shell() {
-    const active = route() === 'detalhe' ? 'ocorrencias' : route();
-    return `<div class="app-shell ${state.navOpen ? 'nav-open' : ''}"><div class="mobile-scrim" data-action="close-nav"></div><aside class="sidebar" id="main-sidebar" aria-label="Navegação principal">
-      <a href="#dashboard" class="brand" aria-label="AlertaBairro, ir para visão geral"><span class="brand-mark">${icon('activity', 23)}</span><span>AlertaBairro<small>Inteligência comunitária</small></span></a>
-      ${nav.map(group => `<div class="nav-group-label">${group.group}</div><nav class="nav-group">${group.items.map(([key,ico,label]) => `<a href="#${key}" class="nav-link ${key === active ? 'active' : ''}" ${key === active ? 'aria-current="page"' : ''}>${icon(ico)}<span>${label}</span>${key === 'validacao' && state.pendingCount ? `<span class="nav-badge">${state.pendingCount}</span>` : ''}</a>`).join('')}</nav>`).join('')}
-      <div class="sidebar-bottom"><div class="impact-card"><div class="impact-dots"><i></i><i></i><i></i></div><strong>Proteção começa perto.</strong><p>Informação local verificada para decisões mais rápidas e transparentes.</p></div><div class="sidebar-foot">Global Solution FIAP 2026.2</div></div>
-    </aside><div class="main-wrap"><header class="topbar"><button class="mobile-menu" data-action="toggle-nav" aria-label="Abrir menu" aria-controls="main-sidebar" aria-expanded="false">${icon('menu', 21)}</button><div class="topbar-title">AlertaBairro <span>/</span> ${routeName(route())}</div><div class="topbar-spacer"></div><form class="topbar-search" id="global-search" role="search">${icon('search', 16)}<input name="search" maxlength="100" aria-label="Buscar ocorrências" placeholder="Buscar ocorrência ou bairro…"></form><button class="top-action" data-action="toggle-notifications" aria-label="Notificações">${icon('bell',17)}${state.unread ? '<span class="dot"></span>' : ''}</button><button class="user-control" data-action="toggle-user" aria-label="Menu de usuário"><span class="avatar">${e(initials(state.user?.name))}</span><span><strong>${e(state.user?.name)}</strong><small>${e(roleName(state.user?.role))}</small></span>${icon('chevron',14)}</button>
-    ${state.menuOpen ? `<div class="user-menu"><button data-action="go-admin">${icon('users',15)} Perfil e permissões</button><button data-action="logout">${icon('logout',15)} Sair da conta</button></div>` : ''}
-    ${state.notificationsOpen ? notificationPopover() : ''}
-    </header><main class="content" id="content">${loading()}</main></div></div>`;
+    const active=route()==='detalhe'?'acompanhar':route();
+    const primary=[['inicio','home','Início'],['alertas','bell','Alertas'],['registrar','plus','Registrar'],['acompanhar','list','Acompanhar']];
+    return `<div class="app"><header class="header"><div class="header-inner"><a class="brand" href="#inicio" aria-label="AlertaBairro, Início"><span class="brand-mark">${icon('activity',22)}</span>AlertaBairro</a><nav class="desktop-nav" aria-label="Navegação principal">${primary.map(([key,ico,label])=>`<a href="#${key}" class="${active===key?'active':''}" ${active===key?'aria-current="page"':''}>${esc(label)}</a>`).join('')}</nav><span class="header-spacer"></span><div class="header-actions"><button class="icon-btn" data-action="more" aria-label="Mais opções" aria-expanded="false" aria-haspopup="true">${icon('menu',19)}</button><button class="icon-btn" data-action="notices" aria-label="Notificações" aria-expanded="false" aria-haspopup="true">${icon('bell',19)}${S.unread?'<i class="dot"></i>':''}</button><button class="profile-btn" data-action="profile" aria-label="Perfil de ${esc(S.user?.name)}" aria-expanded="false" aria-haspopup="true"><span class="avatar">${esc(initials(S.user?.name))}</span><span class="name">${esc(S.user?.name)}<small>${esc(roleLabel(S.user?.role))}</small></span></button></div></div></header><main class="main" id="main-content">${loading()}</main><nav class="bottom-nav" aria-label="Navegação principal">${primary.map(([key,ico,label])=>`<a href="#${key}" class="${active===key?'active':''}" ${active===key?'aria-current="page"':''}>${icon(ico,20)}<span>${esc(label)}</span></a>`).join('')}</nav></div>`;
   }
-  function notificationPopover() {
-    return `<div class="notification-popover"><h3>Notificações ${state.unread ? `<span class="risk-badge risk-high">${state.unread} nova${state.unread === 1 ? '' : 's'}</span>` : ''}</h3>${state.notifications.length ? state.notifications.slice(0,7).map(item => `<div class="notification-item ${item.read_at || item.is_read ? '' : 'unread'}" data-notification="${e(item.id)}" role="button" tabindex="0"><span style="color:var(--teal)">${icon('bell',17)}</span><span><strong>${e(item.title || 'Alerta do bairro')}</strong>${e(item.body || item.message || '')}<small>${formatDateTime(item.created_at)}</small></span></div>`).join('') : '<div class="empty" style="padding:25px"><p>Nenhuma notificação no momento.</p></div>'}<a class="panel-link" href="#alertas" style="display:block;text-align:center;padding:10px">Ver alertas emitidos ${icon('arrow',13)}</a></div>`;
+  function loginPage() {
+    document.title='Entrar · AlertaBairro';
+    root.innerHTML=`<div class="login"><div class="login-wrap"><div class="login-brand"><span class="brand-mark">${icon('activity',22)}</span>AlertaBairro</div><section class="login-card"><div class="kicker">Comunidade mais informada</div><h1>Bem-vindo ao seu bairro.</h1><p>Veja alertas, registre o que acontece e acompanhe as respostas em um só lugar.</p><form id="login-form" class="login-form"><div class="field"><label for="login-email">E-mail</label><input id="login-email" name="email" type="email" autocomplete="username" required placeholder="voce@exemplo.com"></div><div class="field"><label for="login-password">Senha</label><input id="login-password" name="password" type="password" autocomplete="current-password" required placeholder="Sua senha"></div><div id="login-error"></div><button class="btn btn-primary btn-large btn-block" type="submit">Entrar ${icon('arrow',18)}</button></form><div class="demo-title">Explorar com conta de demonstração</div><div class="demo-grid"><button data-demo="morador">Morador</button><button data-demo="agente">Agente</button><button data-demo="gestor">Gestor</button></div></section><p class="login-foot">Protótipo acadêmico · Global Solution FIAP 2026.2</p></div></div>`;
   }
-  function renderLogin() {
-    document.title = 'Entrar · AlertaBairro';
-    root.innerHTML = `<div class="login-page"><section class="login-visual"><div class="brand"><span class="brand-mark">${icon('activity',23)}</span><span>AlertaBairro<small>Inteligência comunitária</small></span></div><div class="login-visual-content"><div class="eyebrow" style="color:#64ddc6">Global Solution FIAP 2026.2</div><h1>O seu bairro <em>mais seguro</em> começa aqui.</h1><p>Registre ocorrências, acompanhe validações e receba alertas com origem e confiança sempre visíveis.</p></div><div class="login-feature"><i></i> Comunidade + tecnologia + resposta responsável</div><svg class="login-illustration" viewBox="0 0 440 330" fill="none" aria-hidden="true"><path d="M5 225 90 170l50 26 92-111 78 30 126-94" stroke="#a5f6de" stroke-width="17" stroke-linecap="round"/><path d="M0 275 95 225l75 70 112-110 144 90" stroke="#a5f6de" stroke-width="12" stroke-linecap="round"/><circle cx="232" cy="85" r="22" fill="#a5f6de"/><circle cx="310" cy="115" r="12" fill="#a5f6de"/></svg></section><section class="login-form-panel"><div class="login-inner"><div class="eyebrow">Bem-vindo de volta</div><h2>Acesse a plataforma</h2><p>Entre com uma conta local de demonstração para explorar os fluxos.</p><form id="login-form"><div class="form-field"><label for="login-email">E-mail</label><input id="login-email" name="email" type="email" autocomplete="username" placeholder="nome@exemplo.com" required></div><div class="form-field"><label for="login-password">Senha</label><input id="login-password" name="password" type="password" autocomplete="current-password" placeholder="••••••••" required></div><div id="login-error"></div><button class="btn btn-primary" type="submit">Entrar na plataforma ${icon('arrow',16)}</button></form><div class="demo-label">Acesso rápido de demonstração</div><div class="demo-accounts"><button class="demo-account" data-demo="morador"><strong>Morador</strong><small>Registrar e acompanhar</small></button><button class="demo-account" data-demo="agente"><strong>Agente</strong><small>Validar e alertar</small></button><button class="demo-account" data-demo="gestor"><strong>Gestor</strong><small>Visão administrativa</small></button></div><p class="login-foot">Ambiente local de demonstração. Dados de teste são carregados pelo comando de seed.</p></div></section></div>`;
+  function alertCard(a) { return `<article class="alert-card"><div class="alert-top"><span class="alert-icon">${icon('bell',17)}</span>${pill(a.status)}</div><div><h3>${esc(a.title||'Alerta no bairro')}</h3><p>${esc(a.message)}</p></div><div class="alert-foot"><span>${icon('pin',13)} ${esc(a.neighborhood)} · ${date(a.created_at)}</span><a class="text-link" href="#detalhe/${esc(a.occurrence_id)}">Ver detalhes ${icon('arrow',13)}</a></div></article>`; }
+  function occurrenceItem(o) { return `<button class="list-item" data-detail="${esc(o.id)}"><span class="list-icon">${icon('pin',18)}</span><span class="item-main"><span class="item-title">${esc(o.title)}</span><span class="item-sub">${esc(o.neighborhood)} · ${date(o.created_at)}</span></span>${pill(o.status)}<span class="chev">${icon('chevron',15)}</span></button>`; }
+  function neighborhoodOptions(names) { return `<option value="">Todos os bairros</option>${names.map(name=>`<option value="${esc(name)}" ${S.neighborhood===name?'selected':''}>${esc(name)}</option>`).join('')}`; }
+  async function homePage() {
+    const [alerts,occurrences]=await Promise.all([api('/api/alerts'),getAllOccurrences()]);
+    const all=alerts.items||[];
+    const neighborhoods=[...new Set([...occurrences.map(o=>o.neighborhood),...all.map(a=>a.neighborhood)].filter(Boolean))].sort((a,b)=>a.localeCompare(b,'pt-BR'));
+    if(S.neighborhood&&!neighborhoods.includes(S.neighborhood)) neighborhoods.unshift(S.neighborhood);
+    const active=all.filter(a=>activeStatuses.includes(a.status)&&(!S.neighborhood||a.neighborhood===S.neighborhood));
+    const mine=occurrences.filter(o=>o.reporter_id===S.user.id).slice(0,3);
+    return `<section class="welcome"><div class="kicker">Olá, ${esc(firstName(S.user.name))}</div><h1>O que acontece no meu bairro?</h1><p>Consulte alertas ativos e ajude a comunidade a acompanhar situações que precisam de atenção.</p><div class="field" style="max-width:350px"><label for="neighborhood-filter">Escolha um bairro para acompanhar</label><select id="neighborhood-filter">${neighborhoodOptions(neighborhoods)}</select></div></section><div class="home-grid" style="margin-top:22px"><div class="home-main"><section><div class="section-head"><div><h2>Alertas ativos${S.neighborhood?` em ${esc(S.neighborhood)}`:''}</h2><p>${active.length?`${active.length} comunicado${active.length===1?'':'s'} em acompanhamento`:'Nenhum comunicado ativo nesta seleção'}</p></div><a class="text-link" href="#alertas">Ver todos ${icon('arrow',13)}</a></div><div class="stack">${active.length?active.slice(0,3).map(alertCard).join(''):empty(S.neighborhood?'Tudo tranquilo por aqui':'Nenhum alerta ativo','Não há alertas ativos para esta seleção. Você pode consultar o histórico ou registrar uma situação.',`<a href="#alertas" class="btn btn-secondary">Consultar alertas</a>`)}</div></section><div class="report-cta"><span class="cta-icon">${icon('plus',23)}</span><span><strong>Viu algo importante?</strong><p>Seu relato ajuda a equipe a entender e verificar a situação.</p></span><a href="#registrar" class="btn btn-primary">Registrar ocorrência ${icon('arrow',15)}</a></div></div><aside class="home-side"><section class="card"><div class="section-head"><div><h2>Seus relatos</h2><p>Acompanhe o que você registrou</p></div></div>${mine.length?`<div class="simple-list">${mine.map(occurrenceItem).join('')}</div>`:`<p style="font-size:13px;margin:0 0 13px">Você ainda não registrou nenhuma ocorrência.</p>`}<a href="#acompanhar" class="text-link">Acompanhar relatos ${icon('arrow',13)}</a></section><section class="card flat"><h3>Como funciona</h3><div class="mini-steps"><div class="mini-step"><span class="step-num">1</span><span><strong>Você conta o que viu</strong><p>Um relato simples inicia o acompanhamento.</p></span></div><div class="mini-step"><span class="step-num">2</span><span><strong>Um agente verifica</strong><p>A equipe analisa a situação antes de alertar.</p></span></div><div class="mini-step"><span class="step-num">3</span><span><strong>O bairro acompanha</strong><p>Alertas e mudanças de estado ficam visíveis.</p></span></div></div></section>${isStaff()?`<a href="#fila" class="btn btn-secondary btn-block">${icon('shield',17)} Abrir área do agente</a>`:''}</aside></div>`;
   }
-
-  function pageIntro(kicker, title, subtitle, actions = '') {
-    return `<div class="page-intro"><div><div class="eyebrow">${e(kicker)}</div><h1>${e(title)}</h1><p>${e(subtitle)}</p></div>${actions ? `<div class="actions">${actions}</div>` : ''}</div>`;
+  async function alertsPage() {
+    const data=await api('/api/alerts');
+    const all=data.items||[];
+    const neighborhoods=[...new Set(all.map(a=>a.neighborhood).filter(Boolean))].sort((a,b)=>a.localeCompare(b,'pt-BR'));
+    if(S.neighborhood&&!neighborhoods.includes(S.neighborhood))neighborhoods.unshift(S.neighborhood);
+    const filtered=all.filter(a=>(!S.neighborhood||a.neighborhood===S.neighborhood)&&(S.alertTab==='active'?activeStatuses.includes(a.status):!activeStatuses.includes(a.status)));
+    return `${pageHead('Comunicados da comunidade','Alertas','Acompanhe avisos verificados e consulte o histórico de situações anteriores.')}<div class="filter-row" style="margin-bottom:16px"><div class="field"><label for="neighborhood-filter">Bairro</label><select id="neighborhood-filter">${neighborhoodOptions(neighborhoods)}</select></div></div><div class="tabs" role="tablist" aria-label="Período dos alertas"><button class="tab ${S.alertTab==='active'?'active':''}" data-alert-tab="active" role="tab" aria-selected="${S.alertTab==='active'}">Ativos</button><button class="tab ${S.alertTab==='history'?'active':''}" data-alert-tab="history" role="tab" aria-selected="${S.alertTab==='history'}">Histórico</button></div><div class="stack">${filtered.length?filtered.map(alertCard).join(''):empty(S.alertTab==='active'?'Nenhum alerta ativo':'Histórico vazio',S.neighborhood?`Não há ${S.alertTab==='active'?'alertas ativos':'alertas encerrados'} em ${S.neighborhood}. Escolha outro bairro ou veja todos.`:'Os comunicados aparecerão aqui quando forem emitidos.',`<a href="#registrar" class="btn btn-secondary">Registrar uma situação</a>`)}</div><div class="note" style="margin-top:17px">Os alertas são emitidos por agentes após a confirmação de uma ocorrência. Este protótipo envia notificações apenas dentro da aplicação.</div>`;
   }
-  const newButton = `<a href="#registrar" class="btn btn-primary">${icon('plus',16)} Nova ocorrência</a>`;
-  function mapPosition(index, id) {
-    const seed = n(id) * 43 + index * 29;
-    return { x: 14 + (seed * 17 % 70), y: 20 + (seed * 13 % 62) };
+  function reportPage() {
+    const step=S.reportStep;
+    const types=S.meta?.types||['Alagamento','Deslizamento','Incêndio','Queda de árvore','Falta de energia','Outro'];
+    const stepTitles=['','O que aconteceu?','Onde aconteceu?','Qual é a urgência?'];
+    const stepText=['','Conte o que observou em poucas palavras.','Informe o bairro; o endereço exato é opcional.','Diga como percebe a situação. Um agente fará a validação.'];
+    const typeField=`<div class="field"><label for="report-type">Tipo de ocorrência</label><select id="report-type" name="type" required><option value="">Escolha uma opção</option>${types.map(t=>`<option value="${esc(t)}" ${S.report.type===t?'selected':''}>${esc(t)}</option>`).join('')}</select></div>`;
+    const fields=step===1?`${typeField}<div class="field"><label for="report-description">O que você viu?</label><textarea id="report-description" name="description" required minlength="20" maxlength="2000" placeholder="Descreva o que aconteceu, quando começou e se há alguém precisando de ajuda.">${esc(S.report.description||'')}</textarea><small>Mínimo de 20 caracteres. Não inclua dados pessoais sensíveis de outras pessoas.</small></div>`:step===2?`<div class="field"><label for="report-neighborhood">Bairro</label><input id="report-neighborhood" name="neighborhood" required minlength="2" maxlength="100" value="${esc(S.report.neighborhood||S.neighborhood)}" placeholder="Ex.: Vila Mariana"></div><div class="field"><label for="report-address">Endereço ou ponto de referência <span class="optional">(opcional)</span></label><input id="report-address" name="address" maxlength="180" value="${esc(S.report.address||'')}" placeholder="Ex.: próximo à escola do bairro"></div><div class="field"><label for="report-date">Quando aconteceu? <span class="optional">(opcional)</span></label><input id="report-date" name="occurred_at" type="datetime-local" value="${esc(S.report.occurred_at||'')}"></div>`:`<div class="field"><label>Urgência percebida</label><div class="urgency-grid">${[['2','Baixa'],['3','Média'],['5','Alta']].map(([value,label])=>`<label class="choice"><input type="radio" name="severity" value="${value}" ${String(S.report.severity||3)===value?'checked':''}><span>${label}</span></label>`).join('')}</div><small>O risco final é calculado pelo sistema e analisado pela equipe.</small></div><div class="field"><label for="report-people">Pessoas afetadas <span class="optional">(estimativa opcional)</span></label><input id="report-people" name="affected_people" type="number" min="0" max="100000" value="${esc(S.report.affected_people??0)}"></div><div class="summary"><strong>Resumo do relato</strong>${esc(S.report.type||'Ocorrência')} em ${esc(S.report.neighborhood||S.neighborhood||'bairro não informado')}<br>${esc((S.report.description||'').slice(0,150))}${(S.report.description||'').length>150?'…':''}</div>`;
+    return `<div class="report-shell">${pageHead('Participação comunitária','Registrar ocorrência','Leva poucos minutos. Você poderá acompanhar o andamento depois de enviar.')}<div class="progress-label"><span>Etapa ${step} de 3</span><span>${Math.round(step/3*100)}%</span></div><div class="progress-track"><i style="width:${step/3*100}%"></i></div><section class="card report-card"><h2>${stepTitles[step]}</h2><p>${stepText[step]}</p><form id="report-form"><div class="report-fields">${fields}</div><div class="report-actions">${step>1?`<button class="btn btn-secondary" type="button" data-action="report-back">${icon('back',15)} Voltar</button>`:`<a class="btn btn-secondary" href="#inicio">Cancelar</a>`}<button class="btn btn-primary" type="submit">${step===3?'Enviar relato':'Continuar'} ${icon('arrow',15)}</button></div></form></section><p class="explain" style="margin:15px 3px">Em perigo imediato, acione os serviços públicos de emergência. O AlertaBairro é um protótipo acadêmico de acompanhamento comunitário.</p></div>`;
   }
-  function mapVisual(items, large = false) {
-    const labels = [...new Set(items.map(i => i.neighborhood).filter(Boolean))].slice(0,3);
-    return `<div class="map-art" style="${large ? 'height:440px' : ''}"><div class="map-road road-a"></div><div class="map-road road-b"></div><div class="map-road road-c"></div><div class="map-road road-d"></div>${labels.map((name,index) => `<span class="map-label l${index+1}">${e(name)}</span>`).join('')}${items.slice(0,12).map((o,index) => {const pos=mapPosition(index,o.id);return `<button class="map-pin ${riskClass(o.risk_level)}" style="left:${pos.x}%;top:${pos.y}%" title="${e(o.title)} — ${e(o.neighborhood)}" aria-label="Ver ${e(o.title)}" data-detail="${e(o.id)}">${icon('location',14)}</button>`}).join('')}</div><div class="map-legend"><span class="legend-item"><i class="legend-dot critical"></i> Crítico</span><span class="legend-item"><i class="legend-dot high"></i> Alto</span><span class="legend-item"><i class="legend-dot moderate"></i> Moderado</span><span class="legend-item"><i class="legend-dot low"></i> Baixo</span><span class="map-note">Distribuição esquemática; endereço completo no detalhe.</span></div>`;
-  }
-  function occurrenceRow(o) {
-    return `<div class="occ-row" data-detail="${e(o.id)}" role="link" tabindex="0"><span class="occ-type-icon">${icon('location',17)}</span><div class="occ-main"><div class="occ-title">${e(o.title)}</div><div class="occ-sub">${e(o.neighborhood)} · ${formatDate(o.created_at)} · ${e(o.source_label || 'Comunidade')} · confiança ${confidence(o.confidence_score)}</div></div>${riskBadge(o.risk_level)}<span class="occ-chevron">${icon('chevron',15)}</span></div>`;
-  }
-  function statCard(label, value, ico, kind, suffix = '') { return `<div class="stat-card"><div class="stat-top"><span>${label}</span><span class="stat-icon ${kind}">${icon(ico,16)}</span></div><strong>${e(value)}</strong><small>${suffix}</small></div>`; }
-  async function dashboardPage() {
-    const [dashboard, list] = await Promise.all([api('/api/dashboard'), api('/api/occurrences?limit=100')]);
-    const items = list.items || [];
-    const stats = dashboard.stats || {};
-    state.pendingCount = n(stats.pending);
-    const risk = dashboard.by_risk || {};
-    const maxRisk = Math.max(1, ...Object.values(risk).map(n));
-    return `<section class="hero"><div class="hero-copy"><div class="eyebrow">Plataforma de inteligência comunitária</div><h2>Transformando sinais do bairro em ações de proteção.</h2><p>Uma visão clara das ocorrências, da validação e dos alertas para quem precisa agir.</p></div><div class="hero-graphic"><svg viewBox="0 0 240 180" fill="none" aria-hidden="true"><circle cx="125" cy="87" r="68" stroke="#8be3d5" stroke-opacity=".35"/><circle cx="125" cy="87" r="45" stroke="#8be3d5" stroke-opacity=".5"/><circle cx="125" cy="87" r="23" stroke="#8be3d5"/><path d="M33 119 75 101l32 17 35-60 62 34" stroke="#84d9c9" stroke-width="3" stroke-linecap="round" stroke-dasharray="5 7"/><circle cx="33" cy="119" r="5" fill="#f4bb78"/><circle cx="75" cy="101" r="6" fill="#6bdac3"/><circle cx="142" cy="58" r="7" fill="#f07c69"/><circle cx="204" cy="92" r="5" fill="#6bdac3"/><path d="M123 73v16l11 7" stroke="white" stroke-width="3" stroke-linecap="round"/></svg></div></section>
-      <div class="stat-grid">${statCard('Ocorrências',stats.total ?? items.length,'layers','blue','registradas')}${statCard('Em andamento',stats.active ?? 0,'activity','','sob acompanhamento')}${statCard('Aguardando análise',stats.pending ?? 0,'shield','amber','na fila')}${statCard('Alertas emitidos',stats.alerts ?? 0,'bell','red','comunicados')}${statCard('Risco crítico',stats.critical ?? 0,'alert','red','casos prioritários')}</div>
-      <div class="dashboard-grid"><div class="dash-col"><section class="panel"><div class="panel-pad"><div class="panel-head"><div><h2>Panorama territorial</h2><p>Ocorrências recentes distribuídas por bairro</p></div><a class="panel-link" href="#mapa">Explorar mapa →</a></div></div>${mapVisual(items)}</section><section class="panel panel-pad"><div class="panel-head"><div><h2>Ocorrências recentes</h2><p>Atualizadas pela comunidade e pela equipe</p></div><a class="panel-link" href="#ocorrencias">Ver todas →</a></div>${items.length ? `<div class="occ-list">${(dashboard.recent || items).slice(0,5).map(occurrenceRow).join('')}</div>` : `<div class="empty"><p>Ainda não há ocorrências registradas.</p>${newButton}</div>`}</section></div>
-      <div class="dash-col"><section class="panel panel-pad"><div class="panel-head"><div><h2>Distribuição de risco</h2><p>Classificação das ocorrências registradas</p></div>${icon('filter',17)}</div><div class="risk-bars">${[['Crítico','critical'],['Alto','high'],['Moderado','moderate'],['Baixo','low']].map(([label,cls]) => `<div class="risk-bar-row"><span>${label}</span><div class="bar-track"><div class="bar-fill ${cls}" style="width:${Math.round(n(risk[label])*100/maxRisk)}%"></div></div><strong>${n(risk[label])}</strong></div>`).join('')}</div></section><section class="panel panel-pad"><div class="panel-head"><div><h2>Ação rápida</h2><p>O que você precisa fazer agora?</p></div></div><div class="action-stack">${newButton}<a href="#validacao" class="btn btn-outline">${icon('shield',16)} Ver fila de validação</a><a href="#alertas" class="btn btn-outline">${icon('bell',16)} Consultar alertas</a></div></section><section class="mini-callout">${icon('shield',21)}<div><strong>Dados com contexto e procedência</strong><p>Cada ocorrência exibe fonte, nível de risco, confiança e histórico das decisões.</p><a class="panel-link" href="#fontes" style="display:inline-block;margin-top:9px">Entenda os indicadores →</a></div></section></div></div>`;
-  }
-
-  async function mapPage() {
-    const result = await api('/api/occurrences?limit=100');
-    const items = result.items || [];
-    return `${pageIntro('Visão territorial','Mapa de ocorrências','Explore o panorama ilustrativo e abra cada registro para consultar endereço, origem e histórico.',newButton)}<div class="dashboard-grid"><section class="panel"><div class="panel-pad"><div class="panel-head"><div><h2>Pontos monitorados</h2><p>${items.length} ocorrência${items.length===1?'':'s'} registrada${items.length===1?'':'s'}</p></div></div></div>${mapVisual(items,true)}</section><section class="panel panel-pad"><div class="panel-head"><div><h2>Registros no mapa</h2><p>Selecione para ver detalhes e confiança</p></div></div>${items.length ? `<div class="occ-list">${items.slice(0,12).map(occurrenceRow).join('')}</div>` : `<div class="empty"><p>Nenhuma ocorrência no mapa.</p>${newButton}</div>`}</section></div>`;
-  }
-
-  function occurrenceTable(items,total,page,limit) {
-    const pages = Math.max(1,Math.ceil(total/limit));
-    return `<section class="panel"><div class="data-table-wrap"><table class="data-table"><thead><tr><th>Ocorrência</th><th>Bairro</th><th>Risco</th><th>Confiança</th><th>Estado</th><th>Atualização</th></tr></thead><tbody>${items.map(o => `<tr data-detail="${e(o.id)}" tabindex="0"><td><div class="table-title">${e(o.title)}</div><div class="table-sub">${idLabel(o.id)} · ${e(o.type)}</div></td><td>${e(o.neighborhood)}</td><td>${riskBadge(o.risk_level)}</td><td><strong>${confidence(o.confidence_score)}</strong></td><td>${statusBadge(o.status)}</td><td>${formatDate(o.updated_at || o.created_at)}</td></tr>`).join('')}</tbody></table></div><div class="table-footer"><span>Mostrando ${items.length} de ${total} registro${total===1?'':'s'} · página ${page} de ${pages}</span><div class="pager"><button type="button" data-page="${page-1}" ${page<=1?'disabled':''} aria-label="Página anterior">‹</button><button type="button" data-page="${page+1}" ${page>=pages?'disabled':''} aria-label="Próxima página">›</button></div></div></section>`;
+  async function followPage() {
+    const all=await getAllOccurrences();
+    const mine=all.filter(o=>o.reporter_id===S.user.id);
+    return `${pageHead('Seus relatos','Acompanhar','Veja em que etapa estão as ocorrências que você registrou.',`<a href="#registrar" class="btn btn-primary">${icon('plus',17)} Novo relato</a>`)}${mine.length?`<section class="card"><div class="section-head"><div><h2>${mine.length} relato${mine.length===1?'':'s'}</h2><p>As etapas mudam após a análise da equipe.</p></div></div><div class="simple-list">${mine.map(occurrenceItem).join('')}</div></section>`:empty('Nenhum relato ainda','Quando você registrar uma ocorrência, poderá acompanhar a validação e os alertas aqui.',`<a href="#registrar" class="btn btn-primary">Registrar ocorrência</a>`)}<div class="note" style="margin-top:16px">“Recebido” significa que o relato foi salvo. “Em análise” indica que um agente iniciou a verificação. Veja a origem e a confiança no detalhe de cada registro.</div>`;
   }
   async function occurrencesPage() {
-    const query = new URLSearchParams({limit:'20',page:String(state.page)});
-    for (const [key,value] of Object.entries(state.filter)) if (value) query.set(key,value);
-    const result = await api(`/api/occurrences?${query}`);
-    const items = result.items || [];
-    const statuses = state.meta?.statuses || ['Registrado','Em validação','Confirmado','Alerta emitido','Em monitoramento','Encerrado','Descartado'];
-    const risks = state.meta?.risks || ['Baixo','Moderado','Alto','Crítico'];
-    return `${pageIntro('Base de registros','Ocorrências','Acompanhe o ciclo completo de cada relato e consulte os critérios de decisão.',newButton)}<form class="toolbar" id="filter-form"><label class="field-search">${icon('search',16)}<input name="search" maxlength="100" aria-label="Buscar registros" placeholder="Buscar por título ou bairro…" value="${e(state.filter.search)}"></label><select name="status" class="select-sm" aria-label="Filtrar por estado"><option value="">Todos os estados</option>${statuses.map(s => `<option value="${e(s)}" ${s===state.filter.status?'selected':''}>${e(s)}</option>`).join('')}</select><select name="risk" class="select-sm" aria-label="Filtrar por risco"><option value="">Todos os riscos</option>${risks.map(s => `<option value="${e(s)}" ${s===state.filter.risk?'selected':''}>${e(s)}</option>`).join('')}</select><button class="btn btn-outline" type="submit">${icon('filter',15)} Aplicar filtros</button></form>${items.length ? occurrenceTable(items,n(result.total),n(result.page),n(result.limit)) : emptyPanel('Nenhuma ocorrência encontrada','Tente ajustar os filtros ou registre uma nova ocorrência.',newButton)}`;
+    const all=await getAllOccurrences();
+    const term=S.search.trim().toLocaleLowerCase('pt-BR');
+    const filtered=term?all.filter(o=>[o.title,o.neighborhood,o.type,o.description].some(v=>String(v||'').toLocaleLowerCase('pt-BR').includes(term))):all;
+    return `${pageHead('Explorar registros','Ocorrências','Consulte os relatos da comunidade e o estado de cada análise.')}<form id="search-form" class="search-input" role="search" style="margin-bottom:18px">${icon('search',18)}<input name="search" maxlength="100" aria-label="Buscar ocorrências" placeholder="Buscar por bairro ou situação" value="${esc(S.search)}"><button class="btn btn-quiet" type="submit">Buscar</button></form>${filtered.length?`<section class="card"><div class="section-head"><h2>${filtered.length} ocorrência${filtered.length===1?'':'s'}</h2></div><div class="simple-list">${filtered.map(occurrenceItem).join('')}</div></section>`:empty('Nenhum resultado','Tente outra busca ou registre uma nova ocorrência.',`<a href="#registrar" class="btn btn-secondary">Registrar ocorrência</a>`)}`;
   }
-
-  async function registerPage() {
-    const types = state.meta?.types || ['Alagamento','Deslizamento','Incêndio','Queda de árvore','Outro'];
-    return `${pageIntro('Participação comunitária','Registrar ocorrência','Descreva o que aconteceu para iniciar a validação. Quanto mais contexto, melhor a análise.')}<div class="form-layout"><section class="panel panel-pad"><div class="panel-head"><div><h2>Dados da ocorrência</h2><p>Campos com * são obrigatórios.</p></div>${icon('file',19)}</div><form id="occurrence-form"><div class="form-grid"><div class="form-field full"><label for="occ-title">Título *</label><input id="occ-title" name="title" required minlength="8" maxlength="120" placeholder="Ex.: Rua alagada após chuva intensa"></div><div class="form-field"><label for="occ-type">Categoria *</label><select id="occ-type" name="type" required><option value="">Selecione a categoria</option>${types.map(t => `<option value="${e(t)}">${e(t)}</option>`).join('')}</select></div><div class="form-field"><label for="occ-date">Data e hora do evento</label><input id="occ-date" name="occurred_at" type="datetime-local"></div><div class="form-field"><label for="occ-neighborhood">Bairro *</label><input id="occ-neighborhood" name="neighborhood" required minlength="2" maxlength="100" placeholder="Ex.: Vila Mariana"></div><div class="form-field"><label for="occ-address">Endereço ou referência</label><input id="occ-address" name="address" maxlength="180" placeholder="Rua, número ou ponto de referência"></div><div class="form-field full"><label for="occ-description">Descrição *</label><textarea id="occ-description" name="description" required minlength="20" maxlength="2000" placeholder="O que aconteceu? Há pessoas afetadas? Quais sinais você observou?"></textarea><small>Evite incluir dados pessoais sensíveis de terceiros.</small></div><div class="form-field"><label for="occ-severity">Gravidade percebida *</label><select id="occ-severity" name="severity" required><option value="">Selecione</option><option value="1">1 — Baixa</option><option value="2">2 — Atenção</option><option value="3">3 — Moderada</option><option value="4">4 — Alta</option><option value="5">5 — Crítica</option></select></div><div class="form-field"><label for="occ-people">Pessoas afetadas (estimativa) *</label><input id="occ-people" name="affected_people" type="number" min="0" max="100000" required value="0"></div></div><div class="form-actions"><a class="btn btn-outline" href="#dashboard">Cancelar</a><button class="btn btn-primary" type="submit">${icon('plus',16)} Registrar ocorrência</button></div></form></section><aside class="dash-col"><div class="panel panel-pad"><div class="panel-head"><div><h2>Como funciona</h2><p>Um fluxo claro, do relato à resolução</p></div></div><div class="steps"><div class="step"><div><strong>Você registra</strong><p>O relato entra na base com origem identificada.</p></div></div><div class="step"><div><strong>A equipe valida</strong><p>Agentes analisam contexto, risco e confiabilidade.</p></div></div><div class="step"><div><strong>O bairro é informado</strong><p>Alertas aprovados geram notificações internas.</p></div></div><div class="step"><div><strong>Seguimos acompanhando</strong><p>O status é atualizado até o encerramento.</p></div></div></div></div><div class="mini-callout">${icon('help',21)}<div><strong>Em situação de perigo imediato</strong><p>Acione os serviços públicos de emergência da sua região. Esta plataforma é um protótipo acadêmico de apoio ao acompanhamento comunitário.</p></div></div></aside></div>`;
+  async function mapPage() {
+    const all=await getAllOccurrences();
+    const groups=Object.entries(all.reduce((acc,o)=>(acc[o.neighborhood]=(acc[o.neighborhood]||0)+1,acc),{})).sort((a,b)=>b[1]-a[1]);
+    const pins=all.slice(0,10).map((o,i)=>{const x=12+(num(o.id)*29+i*17)%75,y=19+(num(o.id)*17+i*31)%65;return `<button class="map-pin ${activeStatuses.includes(o.status)?'alert':''}" style="left:${x}%;top:${y}%" data-detail="${esc(o.id)}" aria-label="Ver ${esc(o.title)} em ${esc(o.neighborhood)}">${icon('pin',16)}</button>`}).join('');
+    return `${pageHead('Panorama local','Mapa por bairro','Uma vista esquemática dos registros. Consulte o endereço no detalhe de cada ocorrência.')}<section class="card"><div class="map-panel" aria-label="Mapa esquemático de ocorrências">${pins}</div><p class="map-legend">Pontos ilustrativos, sem localização precisa. ${icon('pin',13)} Verde: registro · Vermelho: alerta ativo.</p></section><section class="card" style="margin-top:16px"><div class="section-head"><h2>Registros por bairro</h2></div>${groups.length?`<div class="simple-list">${groups.map(([name,count])=>`<button class="list-item" data-neighborhood="${esc(name)}"><span class="list-icon">${icon('pin',18)}</span><span class="item-main"><span class="item-title">${esc(name)}</span><span class="item-sub">${count} registro${count===1?'':'s'}</span></span><span class="chev">${icon('chevron',16)}</span></button>`).join('')}</div>`:`<p>Nenhuma ocorrência cadastrada.</p>`}</section>`;
   }
-
-  function allowedTransitions(o) {
-    if (!['agente','gestor'].includes(state.user?.role)) return [];
-    const fallback = {
-      'Registrado':['Em validação','Descartado'],
-      'Em validação':['Confirmado','Descartado'],
-      'Confirmado':['Alerta emitido','Descartado'],
-      'Alerta emitido':['Em monitoramento'],
-      'Em monitoramento':['Encerrado']
-    };
-    return (state.meta?.transitions || fallback)[o.status] || [];
-  }
-  const transitionLabel = to => ({'Em validação':'Iniciar validação','Confirmado':'Confirmar ocorrência','Descartado':'Descartar ocorrência','Alerta emitido':'Emitir alerta','Em monitoramento':'Iniciar monitoramento','Encerrado':'Encerrar ocorrência'})[to] || `Mover para ${to}`;
-  const transitionIcon = to => ({'Em validação':'shield','Confirmado':'check','Descartado':'close','Alerta emitido':'bell','Em monitoramento':'activity','Encerrado':'flag'})[to] || 'arrow';
-  function historyTimeline(history, occurrence) {
-    const entries = [...history].reverse();
-    if (!entries.length) entries.push({to_status:'Registrado',event:'Registro comunitário',notes:'Ocorrência enviada pela comunidade.',created_at:occurrence.created_at,actor_name:occurrence.reporter_name});
-    return `<div class="timeline">${entries.map(h => `<div class="timeline-item"><strong>${e(h.to_status || h.status || 'Registro')}</strong><small>${formatDateTime(h.created_at)} · ${e(h.actor_name || 'Sistema')}</small>${h.event ? `<p>${e(h.event)}</p>` : ''}${h.notes ? `<p>${e(h.notes)}</p>` : ''}</div>`).join('')}</div>`;
-  }
-  async function detailPage() {
-    const id = routeId();
-    if (!id) return errorPanel('Identificador de ocorrência ausente.',false);
-    const result = await api(`/api/occurrences/${encodeURIComponent(id)}`);
-    const o = result.occurrence || result;
-    const history = result.history || [];
-    const alert = result.alert;
-    const transitions = allowedTransitions(o);
-    const isStaff = ['agente','gestor'].includes(state.user?.role);
-    return `<div class="page-intro"><div><div class="eyebrow">Registro ${idLabel(o.id)} · ${e(o.neighborhood)}</div><div class="detail-heading"><div><h1>${e(o.title)}</h1><div class="meta-line"><span>${icon('location',13)} ${e(o.address || o.neighborhood)}</span><span>${icon('file',13)} ${e(o.type)}</span><span>${icon('activity',13)} Atualizado em ${formatDate(o.updated_at || o.created_at)}</span></div></div></div></div><div class="actions"><a href="#ocorrencias" class="btn btn-outline">Voltar à lista</a>${statusBadge(o.status)} ${riskBadge(o.risk_level)}</div></div>
-      <div class="detail-layout"><div class="dash-col"><section class="panel panel-pad"><h2 class="section-title">Sobre a ocorrência</h2><p class="prose">${e(o.description)}</p><div class="info-grid"><div class="info-tile"><span>Origem</span><strong>${e(o.source_label || 'Relato comunitário')}</strong></div><div class="info-tile"><span>Responsável pelo relato</span><strong>${e(o.reporter_name || 'Comunidade')}</strong></div><div class="info-tile"><span>Registrado em</span><strong>${formatDateTime(o.created_at)}</strong></div><div class="info-tile"><span>Pessoas afetadas</span><strong>${n(o.affected_people)}</strong></div><div class="info-tile"><span>Gravidade informada</span><strong>${n(o.severity)} de 5</strong></div><div class="info-tile"><span>Bairro</span><strong>${e(o.neighborhood)}</strong></div><div class="info-tile"><span>Evidências</span><strong>${n(o.evidence_count)} registro${n(o.evidence_count)===1?'':'s'}</strong></div><div class="info-tile"><span>Corroborações</span><strong>${n(o.corroborations)} confirmação${n(o.corroborations)===1?'':'ões'}</strong></div></div></section>
-      ${alert ? `<section class="alert-banner">${icon('bell',21)}<div><strong>Alerta emitido</strong><p>${e(alert.message)}</p><p>Publicado em ${formatDateTime(alert.created_at)} · Público: ${e(alert.audience || 'usuários da plataforma')}</p></div></section>` : ''}
-      <section class="panel panel-pad"><div class="panel-head"><div><h2>Histórico de decisões</h2><p>Eventos e responsáveis por cada mudança de estado</p></div>${icon('activity',18)}</div>${historyTimeline(history,o)}</section></div>
-      <aside class="dash-col"><section class="panel panel-pad"><div class="panel-head"><div><h2>Risco e confiança</h2><p>Indicadores calculados pelo sistema</p></div>${icon('target',18)}</div><div class="score-row"><span>Classificação de risco</span>${riskBadge(o.risk_level)}</div><div class="score-row"><span>Pontuação de risco</span><strong>${n(o.risk_score)} / 100</strong></div><div class="score-row" style="display:block"><div style="display:flex;justify-content:space-between"><span>Confiança do registro</span><strong>${confidence(o.confidence_score)}</strong></div><div class="confidence-meter"><i style="width:${Math.min(100,Math.max(0,n(o.confidence_score)))}%"></i></div></div><div class="score-row"><span>Fonte</span>${sourceBadge(o.source_label)}</div><a class="panel-link" href="#fontes" style="display:inline-block;margin-top:12px">Entenda a origem e os critérios →</a></section>
-      <section class="panel panel-pad"><div class="panel-head"><div><h2>Próxima ação</h2><p>Estado atual: ${e(o.status)}</p></div>${icon('arrow',18)}</div>${transitions.length ? `<div class="action-stack">${transitions.map(to => `<button class="btn ${to === 'Descartado' ? 'btn-danger' : to === 'Alerta emitido' ? 'btn-primary' : 'btn-outline'}" data-transition="${e(to)}">${icon(transitionIcon(to),16)} ${transitionLabel(to)}</button>`).join('')}</div><div id="transition-slot"></div>` : `<div class="inline-message ${isStaff ? 'success' : 'warn'}">${isStaff ? 'Não há mais transições disponíveis para este estado.' : 'A validação e as mudanças de estado são realizadas por agentes autorizados.'}</div>`}</section>
-      <section class="mini-callout">${icon('shield',20)}<div><strong>Rastreabilidade do fluxo</strong><p>Origem, classificação e decisões ficam visíveis para dar contexto a cada alerta.</p></div></section></aside></div>`;
-  }
-
-  async function validationPage() {
-    const result = await api('/api/occurrences?limit=100');
-    const all = result.items || [];
-    const waiting = all.filter(o => ['Registrado','Em validação','Confirmado'].includes(o.status));
-    return `${pageIntro('Operação de campo','Fila de validação','Priorize registros, confira os dados e avance cada ocorrência com justificativa.',`<a href="#fontes" class="btn btn-outline">${icon('target',16)} Critérios de confiança</a>`)}${!['agente','gestor'].includes(state.user?.role) ? `<div class="alert-banner">${icon('lock',21)}<div><strong>Ações reservadas a agentes e gestores</strong><p>Você pode acompanhar a fila; entre com um perfil de agente para validar registros.</p></div></div>` : ''}<div class="stat-grid" style="grid-template-columns:repeat(3,minmax(0,1fr))">${statCard('Aguardando triagem',all.filter(o=>o.status==='Registrado').length,'file','amber','registros novos')}${statCard('Em validação',all.filter(o=>o.status==='Em validação').length,'shield','blue','em análise')}${statCard('Confirmadas',all.filter(o=>o.status==='Confirmado').length,'check','','prontas para alerta')}</div>${waiting.length ? `<div class="queue-grid">${waiting.map(o => `<article class="queue-card"><div class="tags">${statusBadge(o.status)}${riskBadge(o.risk_level)}</div><h3>${e(o.title)}</h3><p>${e(o.neighborhood)} · ${e(o.type)} · ${formatDate(o.created_at)}</p><div class="foot"><span>Origem: ${e(o.source_label || 'Comunidade')}</span><strong>Confiança ${confidence(o.confidence_score)}</strong></div><button class="btn btn-outline" data-detail="${e(o.id)}">${icon('chevron',15)} Abrir análise</button></article>`).join('')}</div>` : emptyPanel('Fila em dia','Não há registros aguardando validação neste momento.')}`;
-  }
-
-  async function alertsPage() {
-    const [alerts, occurrences] = await Promise.all([api('/api/alerts'),api('/api/occurrences?limit=100')]);
-    const items = alerts.items || [];
-    const ready = (occurrences.items || []).filter(o => o.status === 'Confirmado');
-    return `${pageIntro('Comunicação responsável','Alertas emitidos','Comunicados internos gerados a partir de ocorrências confirmadas, com histórico auditável.',`<a href="#validacao" class="btn btn-outline">${icon('shield',16)} Ver validação</a>`)}<div class="alert-banner">${icon('bell',21)}<div><strong>Notificações internas</strong><p>Ao emitir um alerta, o sistema cria notificações para os usuários locais. Esta demonstração não envia SMS ou push externo.</p></div></div>${ready.length && ['agente','gestor'].includes(state.user?.role) ? `<section class="panel panel-pad" style="margin-bottom:18px"><div class="panel-head"><div><h2>Prontas para alerta</h2><p>Ocorrências confirmadas aguardando comunicado</p></div></div><div class="occ-list">${ready.map(occurrenceRow).join('')}</div></section>` : ''}${items.length ? `<div class="card-grid">${items.map(a => `<article class="incident-card"><div class="tags">${riskBadge(a.risk_level)}${statusBadge(a.status || 'Alerta emitido')}</div><h3>${e(a.title || 'Alerta do bairro')}</h3><p>${e(a.message)}</p><div class="foot"><span>${e(a.neighborhood || '')} · ${formatDateTime(a.created_at)}</span><strong>${confidence(a.confidence_score)} confiança</strong></div><button class="btn btn-subtle" style="margin-top:12px" data-detail="${e(a.occurrence_id)}">Ver ocorrência ${icon('arrow',14)}</button></article>`).join('')}</div>` : emptyPanel('Nenhum alerta emitido','Quando uma ocorrência confirmada gerar um alerta, ele aparecerá aqui.')}`;
-  }
-
-  async function monitoringPage() {
-    const result = await api('/api/occurrences?limit=100');
-    const all = result.items || [];
-    const monitoring = all.filter(o => ['Alerta emitido','Em monitoramento'].includes(o.status));
-    const closed = all.filter(o => o.status === 'Encerrado').slice(0,5);
-    return `${pageIntro('Acompanhamento contínuo','Monitoramento','Da emissão do alerta ao encerramento, cada mudança permanece registrada no histórico.',`<a href="#mapa" class="btn btn-outline">${icon('map',16)} Ver mapa</a>`)}<div class="stat-grid" style="grid-template-columns:repeat(3,minmax(0,1fr))">${statCard('Alertas ativos',all.filter(o=>o.status==='Alerta emitido').length,'bell','red','aguardam acompanhamento')}${statCard('Em monitoramento',all.filter(o=>o.status==='Em monitoramento').length,'activity','blue','em observação')}${statCard('Encerradas',all.filter(o=>o.status==='Encerrado').length,'check','','histórico concluído')}</div>${monitoring.length ? `<div class="queue-grid">${monitoring.map(o => `<article class="queue-card"><div class="tags">${statusBadge(o.status)}${riskBadge(o.risk_level)}</div><h3>${e(o.title)}</h3><p>${e(o.neighborhood)} · Atualizado ${formatDate(o.updated_at || o.created_at)}</p><div class="foot"><span>${e(o.source_label || 'Comunidade')}</span><strong>${confidence(o.confidence_score)} confiança</strong></div><button class="btn btn-outline" data-detail="${e(o.id)}">${icon('activity',15)} Acompanhar caso</button></article>`).join('')}</div>` : emptyPanel('Nenhum caso ativo','As ocorrências em monitoramento aparecerão aqui.')}${closed.length ? `<section class="panel panel-pad" style="margin-top:19px"><div class="panel-head"><div><h2>Encerramentos recentes</h2><p>Registros concluídos com histórico disponível</p></div></div><div class="occ-list">${closed.map(occurrenceRow).join('')}</div></section>` : ''}`;
-  }
-
   async function sourcesPage() {
-    const result = await api('/api/sources');
-    const items = result.items || [];
-    const kindIcon = kind => ({community:'users',official:'shield',external:'wifi'})[kind] || 'database';
-    const kindLabel = kind => ({community:'Comunidade',official:'Fonte oficial',external:'Fonte externa'})[kind] || kind;
-    return `${pageIntro('Transparência dos dados','Origem & confiança','Saiba de onde vêm os relatos e como interpretar o grau de confiança de cada ocorrência.')}<div class="source-grid" style="margin-bottom:19px">${items.map(s => `<article class="source-card"><span class="source-icon">${icon(kindIcon(s.kind),20)}</span><div class="eyebrow" style="margin-bottom:7px">${e(kindLabel(s.kind))}</div><h3>${e(s.name)}</h3><p>${e(s.description || 'Fonte cadastrada no sistema.')}</p><div class="foot" style="border-top:1px solid var(--line);padding-top:12px;margin-top:15px;display:flex;justify-content:space-between;gap:8px;font-size:10px;color:#8a9da2"><span>${e(s.status || 'Cadastrada')}</span><strong>${n(s.occurrences_count)} registro${n(s.occurrences_count)===1?'':'s'}</strong></div></article>`).join('') || `<div class="source-card"><h3>Nenhuma fonte cadastrada</h3><p>Fontes adicionadas ao banco serão exibidas aqui.</p></div>`}</div><div class="dashboard-grid"><section class="panel panel-pad"><div class="panel-head"><div><h2>Como ler a confiança</h2><p>Uma referência para interpretar o indicador exibido nos detalhes</p></div>${icon('target',18)}</div><div class="explain-list"><div class="explain-item"><span class="num">1</span><div><strong>Origem do relato</strong>O tipo de fonte contribui para a pontuação e permanece visível no registro.</div></div><div class="explain-item"><span class="num">2</span><div><strong>Evidências e corroborações</strong>Registros adicionais e confirmação independente elevam a confiança.</div></div><div class="explain-item"><span class="num">3</span><div><strong>Recência e verificação</strong>O tempo desde o evento e a validação por agente também entram no cálculo.</div></div></div><div class="inline-message" style="margin-top:17px">A confiança é um indicador calculado, não uma garantia de veracidade. Consulte o histórico antes de agir.</div></section><section class="panel panel-pad"><div class="panel-head"><div><h2>Risco e decisão</h2><p>Sinais para priorização operacional</p></div>${icon('alert',18)}</div><div class="formula"><strong>Classificação de risco</strong><span class="formula-code">Baixo → Moderado → Alto → Crítico</span>O risco combina o tipo de evento, a gravidade informada e o número estimado de pessoas afetadas.</div><p style="font-size:11px;color:#7f9298;line-height:1.7;margin:14px 0 0">A emissão de alerta é uma decisão explícita do agente ou gestor. A notificação interna só é criada após essa transição.</p></section></div>`;
+    const data=await api('/api/sources');
+    const items=data.items||[];
+    const labels={community:'Comunidade',external:'Fonte externa',official:'Fonte oficial'};
+    return `${pageHead('Transparência','Origem e confiança','Entenda de onde vêm os registros e como o sistema ajuda a priorizar a análise.')}<div class="note" style="margin-bottom:17px">As fontes externas e oficiais desta demonstração são simuladas. Não há atualização automática de dados públicos.</div><div class="grid-3">${items.map(s=>`<article class="card source-card"><span class="source-kind">${esc(labels[s.kind]||s.kind)}</span><h3>${esc(s.name)}</h3><p>${esc(s.description||'Fonte cadastrada.')}</p><div class="source-foot"><span>${esc(s.status||'Cadastrada')}</span><strong>${num(s.occurrences_count)} registro${num(s.occurrences_count)===1?'':'s'}</strong></div></article>`).join('')}</div><div class="grid-2" style="margin-top:17px"><section class="card"><h2>O que significa confiança?</h2><p style="font-size:13px">É uma pontuação de apoio à análise, não uma probabilidade de verdade. Cada detalhe mostra a fonte e o valor calculado.</p><div class="mini-steps"><div class="mini-step"><span class="step-num">1</span><span><strong>Tipo de fonte</strong><p>Relatos comunitários, fontes externas e oficiais têm pesos diferentes.</p></span></div><div class="mini-step"><span class="step-num">2</span><span><strong>Evidências e corroboração</strong><p>Informações adicionais e confirmações independentes elevam o indicador.</p></span></div><div class="mini-step"><span class="step-num">3</span><span><strong>Recência e revisão</strong><p>O tempo desde o evento e a verificação por agente também contam.</p></span></div></div></section><section class="card"><h2>Como o risco é classificado?</h2><p style="font-size:13px">A regra considera o tipo de evento, a gravidade informada e a quantidade estimada de pessoas afetadas. A classificação auxilia a triagem.</p><div class="note warn">Um alerta é sempre uma decisão explícita de agente ou gestor após confirmação; o sistema só então cria notificações internas.</div><a href="#ocorrencias" class="btn btn-secondary" style="margin-top:15px">Explorar ocorrências ${icon('arrow',15)}</a></section></div>`;
   }
-
+  const transitionLabel = to => ({'Em validação':'Iniciar análise','Confirmado':'Confirmar relato','Descartado':'Não confirmar','Alerta emitido':'Enviar alerta','Em monitoramento':'Iniciar acompanhamento','Encerrado':'Marcar como resolvido'})[to] || to;
+  const transitionIcon = to => ({'Em validação':'shield','Confirmado':'check','Descartado':'close','Alerta emitido':'bell','Em monitoramento':'activity','Encerrado':'check'})[to] || 'arrow';
+  function staffTabs(active) { return `<nav class="workspace-tabs" aria-label="Área do agente"><a href="#fila" class="${active==='fila'?'active':''}">Fila de análise</a><a href="#monitoramento" class="${active==='monitoramento'?'active':''}">Monitoramento</a>${S.user?.role==='gestor'?`<a href="#administracao" class="${active==='administracao'?'active':''}">Administração</a>`:''}</nav>`; }
+  function workspaceHead(title,description,active) { return `<div class="workspace-head"><div class="kicker">Área do agente</div><h1>${esc(title)}</h1><p>${esc(description)}</p></div>${staffTabs(active)}`; }
+  function restrictedPage(role='agente') { return `${pageHead('Acesso restrito','Área da equipe','Esta parte da aplicação é reservada aos perfis autorizados.')}<div class="card"><div class="empty"><div class="empty-icon">${icon('shield',22)}</div><h3>Entre como ${esc(role)} para continuar</h3><p>Moradores podem registrar e acompanhar relatos nas telas principais.</p><a href="#inicio" class="btn btn-secondary">Voltar ao Início</a></div></div>`; }
+  function transitionForm(to) { const alert=to==='Alerta emitido', discard=to==='Descartado'; return `<form id="transition-form" class="transition-form" data-to="${esc(to)}"><div class="field"><label for="transition-notes">${discard?'Por que o relato não foi confirmado? *':'Nota sobre a decisão'}</label><textarea id="transition-notes" name="notes" maxlength="1000" ${discard?'required minlength="8"':''} placeholder="${discard?'Explique a decisão em pelo menos 8 caracteres.':'Descreva brevemente o que foi verificado.'}"></textarea></div>${alert?`<div class="field"><label for="transition-message">Mensagem para a comunidade *</label><textarea id="transition-message" name="message" required minlength="20" maxlength="500" placeholder="Explique a situação e a orientação para os moradores (mínimo 20 caracteres)."></textarea></div>`:''}<div class="btn-row"><button type="button" class="btn btn-secondary" data-action="cancel-transition">Cancelar</button><button type="submit" class="btn ${discard?'btn-danger':'btn-primary'}">${transitionLabel(to)}</button></div></form>`; }
+  async function detailPage() {
+    const id=routeId(); if(!/^\d+$/.test(id)) return errorCard('Identificador da ocorrência inválido.');
+    const result=await api(`/api/occurrences/${encodeURIComponent(id)}`);
+    const o=result.occurrence, history=result.history||[], alert=result.alert;
+    const transitions=isStaff()?(S.meta?.transitions?.[o.status]||[]):[];
+    const historyHtml=[...history].reverse().map(h=>`<div class="time-item"><strong>${esc(statusLabel(h.to_status))}</strong><small>${dateTime(h.created_at)} · ${esc(h.actor_name||'Sistema')}</small>${h.event?`<p>${esc(h.event)}</p>`:''}${h.notes?`<p>${esc(h.notes)}</p>`:''}</div>`).join('');
+    const score=Math.min(100,Math.max(0,num(o.confidence_score)));
+    return `<div style="margin-bottom:18px"><a href="#${isStaff()?'fila':'acompanhar'}" class="text-link">${icon('back',15)} Voltar</a></div><div class="detail-head page-head"><div><div class="kicker">Ocorrência #${esc(o.id)} · ${esc(o.neighborhood)}</div><h1>${esc(o.title)}</h1><p>Registrada em ${date(o.created_at)} · ${esc(o.type)}</p></div>${pill(o.status)}</div><div class="detail-grid"><div class="stack"><section class="card"><h2>O que foi relatado</h2><div class="detail-body">${esc(o.description)}</div><div class="info-grid" style="margin-top:17px"><div class="info-cell"><small>Bairro</small><strong>${esc(o.neighborhood)}</strong></div><div class="info-cell"><small>Referência</small><strong>${esc(o.address||'Não informada')}</strong></div><div class="info-cell"><small>Quando</small><strong>${dateTime(o.occurred_at)}</strong></div><div class="info-cell"><small>Pessoas afetadas</small><strong>${num(o.affected_people)}</strong></div></div></section>${alert?`<section class="alert-card"><div class="alert-top"><span class="alert-icon">${icon('bell',18)}</span>${pill(o.status)}</div><div><h3>Alerta enviado à comunidade</h3><p>${esc(alert.message)}</p></div><div class="alert-foot">Publicado em ${dateTime(alert.created_at)}</div></section>`:''}<section class="card"><h2>Andamento</h2><p style="font-size:12px">As mudanças ficam registradas para que todos possam acompanhar as decisões.</p><div class="timeline">${historyHtml||'<p>Nenhuma atualização registrada.</p>'}</div></section></div><aside class="stack"><section class="card"><h2>Origem e confiança</h2><p style="font-size:13px;margin-bottom:13px">Fonte: <strong style="color:var(--ink)">${esc(o.source_label||'Comunidade')}</strong></p><div class="section-head" style="margin-bottom:2px"><span style="font-size:13px">Indicador de confiança</span><strong>${score}%</strong></div><div class="confidence-bar"><i style="width:${score}%"></i></div><p class="explain">Esse indicador orienta a análise; ele não garante que um relato seja verdadeiro.</p><details class="details"><summary>Ver critérios e risco</summary><p>Tipo de fonte, evidências (${num(o.evidence_count)}), corroborações (${num(o.corroborations)}), recência e validação por agente compõem a confiança.</p><p>Risco calculado: <strong>${esc(o.risk_level)} (${num(o.risk_score)}/100)</strong>. A regra considera tipo de evento, gravidade e pessoas afetadas.</p><a href="#fontes" class="text-link">Entenda as fontes ${icon('arrow',13)}</a></details></section>${isStaff()?`<section class="card"><h2>Próxima ação</h2><p style="font-size:12px">Estado atual: ${esc(statusLabel(o.status))}. Escolha uma transição e registre o motivo.</p>${transitions.length?`<div class="transition-choice">${transitions.map(to=>`<button class="btn ${to==='Descartado'?'btn-danger':to==='Alerta emitido'?'btn-primary':'btn-secondary'}" data-transition="${esc(to)}">${icon(transitionIcon(to),17)} ${esc(transitionLabel(to))}</button>`).join('')}</div><div id="transition-slot"></div>`:`<div class="note">Não há novas ações para este estado.</div>`}</section>`:''}</aside></div>`;
+  }
+  async function queuePage() {
+    if(!isStaff()) return restrictedPage();
+    const all=await getAllOccurrences();
+    const waiting=all.filter(o=>['Registrado','Em validação','Confirmado'].includes(o.status));
+    const counts={new:all.filter(o=>o.status==='Registrado').length,review:all.filter(o=>o.status==='Em validação').length,ready:all.filter(o=>o.status==='Confirmado').length};
+    return `${workspaceHead('Fila de análise','Revise relatos, confirme informações e decida quando avisar a comunidade.','fila')}<div class="stat-strip" style="grid-template-columns:repeat(3,1fr);margin-bottom:18px"><div class="stat"><strong>${counts.new}</strong><span>Recebidos</span></div><div class="stat"><strong>${counts.review}</strong><span>Em análise</span></div><div class="stat"><strong>${counts.ready}</strong><span>Confirmados</span></div></div>${waiting.length?`<div class="workspace-grid">${waiting.map(o=>`<article class="card"><div class="section-head"><span>${pill(o.status)}</span><small style="color:#90a49c">${date(o.created_at)}</small></div><h3>${esc(o.title)}</h3><p style="font-size:12px">${esc(o.neighborhood)} · ${esc(o.type)}</p><p style="font-size:12px">Risco ${esc(o.risk_level)} · confiança ${num(o.confidence_score)}%</p><button class="btn btn-secondary btn-block" data-detail="${esc(o.id)}">Abrir análise ${icon('arrow',15)}</button></article>`).join('')}</div>`:empty('Fila em dia','Não há registros aguardando análise.')}`;
+  }
+  async function monitoringPage() {
+    if(!isStaff()) return restrictedPage();
+    const all=await getAllOccurrences();
+    const active=all.filter(o=>activeStatuses.includes(o.status));
+    const closed=all.filter(o=>o.status==='Encerrado').slice(0,6);
+    return `${workspaceHead('Monitoramento','Acompanhe alertas ativos até que a situação seja resolvida.','monitoramento')}${active.length?`<section class="card"><div class="section-head"><h2>${active.length} caso${active.length===1?'':'s'} ativo${active.length===1?'':'s'}</h2></div><div class="simple-list">${active.map(occurrenceItem).join('')}</div></section>`:empty('Nenhum caso ativo','Casos com alerta enviado ou em acompanhamento aparecerão aqui.')}${closed.length?`<section class="card" style="margin-top:17px"><div class="section-head"><h2>Resolvidos recentemente</h2></div><div class="simple-list">${closed.map(occurrenceItem).join('')}</div></section>`:''}`;
+  }
   async function administrationPage() {
-    if (state.user?.role !== 'gestor') return `${pageIntro('Gestão da plataforma','Administração','Controle de acesso e visão da operação demonstrativa.')}<div class="panel"><div class="empty"><span class="empty-icon">${icon('lock',22)}</span><h3>Acesso restrito a gestores</h3><p>Entre com a conta de gestor para consultar usuários e permissões desta demonstração.</p></div></div>`;
-    const [users,health,summary] = await Promise.all([api('/api/users'),api('/api/health'),api('/api/dashboard')]);
-    const items = users.items || [];
-    return `${pageIntro('Gestão da plataforma','Administração','Usuários demonstrativos, permissões e saúde da aplicação.',`<button class="btn btn-outline" data-action="retry">${icon('refresh',16)} Atualizar</button>`)}<div class="stat-grid" style="grid-template-columns:repeat(3,minmax(0,1fr))">${statCard('Usuários cadastrados',items.length,'users','blue','contas locais')}${statCard('Ocorrências',summary.stats?.total || 0,'layers','','no banco')}${statCard('Serviço da API',health.status === 'ok' ? 'Online' : 'Disponível','wifi','','verificação local')}</div><section class="panel" style="margin-bottom:19px"><div class="panel-pad"><div class="panel-head"><div><h2>Contas locais</h2><p>Perfis incluídos para demonstrar as restrições de acesso</p></div></div></div><div class="data-table-wrap"><table class="data-table" style="min-width:600px"><thead><tr><th>Nome</th><th>E-mail</th><th>Perfil</th><th>Permissão principal</th></tr></thead><tbody>${items.map(u => `<tr style="cursor:default"><td class="table-title">${e(u.name)}</td><td>${e(u.email)}</td><td>${e(roleName(u.role))}</td><td>${e(({morador:'Registrar e acompanhar',agente:'Validar e emitir alertas',gestor:'Gerir e validar'})[u.role] || 'Consultar')}</td></tr>`).join('')}</tbody></table></div></section><section class="panel panel-pad"><div class="panel-head"><div><h2>Matriz de permissões</h2><p>As restrições são verificadas na API</p></div>${icon('shield',18)}</div><div class="data-table-wrap"><table class="data-table" style="min-width:570px"><thead><tr><th>Ação</th><th>Morador</th><th>Agente</th><th>Gestor</th></tr></thead><tbody><tr style="cursor:default"><td>Registrar ocorrência</td><td>Sim</td><td>Sim</td><td>Sim</td></tr><tr style="cursor:default"><td>Validar e alterar estado</td><td>Não</td><td>Sim</td><td>Sim</td></tr><tr style="cursor:default"><td>Emitir alerta</td><td>Não</td><td>Sim</td><td>Sim</td></tr><tr style="cursor:default"><td>Consultar usuários</td><td>Não</td><td>Não</td><td>Sim</td></tr></tbody></table></div></section>`;
+    if(S.user?.role!=='gestor') return restrictedPage('gestor');
+    const [users,dashboard,health]=await Promise.all([api('/api/users'),api('/api/dashboard'),api('/api/health')]);
+    const list=users.items||[];
+    return `${workspaceHead('Administração','Visão local da operação e dos perfis de demonstração.','administracao')}<div class="stat-strip" style="margin-bottom:17px"><div class="stat"><strong>${num(dashboard.stats?.total)}</strong><span>Ocorrências</span></div><div class="stat"><strong>${num(dashboard.stats?.active)}</strong><span>Em andamento</span></div><div class="stat"><strong>${num(dashboard.stats?.alerts)}</strong><span>Alertas emitidos</span></div><div class="stat"><strong>${health.status==='ok'?'OK':'?'}</strong><span>API local</span></div></div><section class="card"><div class="section-head"><div><h2>Usuários de demonstração</h2><p>A API verifica a permissão em cada operação.</p></div></div><div class="simple-list">${list.map(u=>`<div class="list-item" style="cursor:default"><span class="avatar">${esc(initials(u.name))}</span><span class="item-main"><span class="item-title">${esc(u.name)}</span><span class="item-sub">${esc(u.email)}</span></span><span class="pill active">${esc(roleLabel(u.role))}</span></div>`).join('')}</div></section><div class="note" style="margin-top:16px">Moradores registram e acompanham. Agentes validam e emitem alertas. Gestores também consultam os usuários locais.</div>`;
   }
-
-  const pages = {dashboard:dashboardPage,mapa:mapPage,ocorrencias:occurrencesPage,registrar:registerPage,detalhe:detailPage,validacao:validationPage,alertas:alertsPage,monitoramento:monitoringPage,fontes:sourcesPage,administracao:administrationPage};
+  const pages={inicio:homePage,alertas:alertsPage,registrar:reportPage,acompanhar:followPage,ocorrencias:occurrencesPage,mapa:mapPage,fontes:sourcesPage,detalhe:detailPage,fila:queuePage,monitoramento:monitoringPage,administracao:administrationPage};
   async function render() {
-    if (!state.user) { renderLogin(); return; }
-    state.navOpen = false; state.menuOpen = false; state.notificationsOpen = false; state.transitionTo = '';
-    const currentRun = ++state.routeRun;
-    const currentRoute = pages[route()] ? route() : 'dashboard';
-    document.title = `${routeName(currentRoute)} · AlertaBairro`;
-    root.innerHTML = shell();
-    const content = document.getElementById('content');
-    try {
-      const html = await pages[currentRoute]();
-      if (currentRun !== state.routeRun || !state.user) return;
-      content.innerHTML = html;
-      const badge = root.querySelector('.nav-link[href="#validacao"] .nav-badge');
-      if (badge) badge.textContent = state.pendingCount || '';
-      window.scrollTo({top:0,behavior:'instant'});
-    } catch (err) {
-      if (currentRun !== state.routeRun || !state.user) return;
-      content.innerHTML = errorPanel(err.message);
-    }
+    if(!S.user){loginPage();return;}
+    S.menu='';S.transitionTo='';
+    const current=++S.renderId;
+    const key=pages[route()]?route():'inicio';
+    document.title=`${({inicio:'Início',alertas:'Alertas',registrar:'Registrar',acompanhar:'Acompanhar',ocorrencias:'Ocorrências',mapa:'Mapa',fontes:'Origem e confiança',detalhe:'Detalhe',fila:'Fila de análise',monitoramento:'Monitoramento',administracao:'Administração'})[key]} · AlertaBairro`;
+    root.innerHTML=shell();
+    const main=root.querySelector('#main-content');
+    try { const html=await pages[key](); if(current!==S.renderId||!S.user)return; main.innerHTML=html; window.scrollTo(0,0); }
+    catch(err) { if(current!==S.renderId||!S.user)return; main.innerHTML=errorCard(err.message); }
   }
-
-  async function syncNotifications() {
-    if (!state.user) return;
-    try {
-      const result = await api('/api/notifications');
-      state.notifications = result.items || [];
-      state.unread = n(result.unread);
-      const action = root.querySelector('[data-action="toggle-notifications"]');
-      if (action) action.innerHTML = `${icon('bell',17)}${state.unread ? '<span class="dot"></span>' : ''}`;
-    } catch { /* A failing notification request should not hide the main application. */ }
-  }
-  async function syncPendingCount() {
-    if (!state.user) return;
-    try { const result = await api('/api/dashboard'); state.pendingCount = n(result.stats?.pending); }
-    catch { /* The dashboard page will still show its own error if necessary. */ }
-  }
-
-  function transitionForm(to) {
-    const isAlert = to === 'Alerta emitido';
-    const isDiscard = to === 'Descartado';
-    return `<form id="transition-form" class="transition-form" data-to="${e(to)}"><label for="transition-notes">${isDiscard ? 'Justificativa do descarte *' : 'Nota da decisão'}</label><textarea id="transition-notes" name="notes" ${isDiscard ? 'required minlength="8"' : ''} placeholder="${isDiscard ? 'Explique por que o relato foi descartado…' : 'Registre os elementos considerados na decisão…'}"></textarea>${isAlert ? `<label for="transition-message">Mensagem do alerta *</label><textarea id="transition-message" name="message" required minlength="20" placeholder="Descreva a situação e a orientação para os moradores (mínimo de 20 caracteres)…"></textarea>` : ''}<div class="actions"><button type="button" class="btn btn-outline" data-action="cancel-transition">Cancelar</button><button type="submit" class="btn ${isDiscard ? 'btn-danger' : 'btn-primary'}">${icon(transitionIcon(to),15)} Confirmar: ${transitionLabel(to)}</button></div></form>`;
-  }
-
   async function login(email,password) {
-    const button = root.querySelector('#login-form button[type="submit"]');
-    if (button) { button.disabled = true; button.textContent = 'Entrando…'; }
+    const button=root.querySelector('#login-form button[type="submit"]');
+    if(button){button.disabled=true;button.textContent='Entrando…';}
     try {
-      const result = await api('/api/auth/login',{method:'POST',body:JSON.stringify({email,password})});
-      state.token = result.token; state.user = result.user; localStorage.setItem('ab_token',state.token);
-      try { state.meta = await api('/api/meta'); } catch { state.meta = null; }
-      await Promise.all([syncNotifications(),syncPendingCount()]); render(); toast(`Bem-vindo, ${state.user.name.split(' ')[0]}!`,'success');
-    } catch (err) {
-      const target = root.querySelector('#login-error');
-      if (target) target.innerHTML = `<div class="login-error">${e(err.message)}</div>`;
-      if (button) { button.disabled = false; button.innerHTML = `Entrar na plataforma ${icon('arrow',16)}`; }
+      const data=await api('/api/auth/login',{method:'POST',body:JSON.stringify({email,password})});
+      S.token=data.token;S.user=data.user;localStorage.setItem('ab_token',S.token);
+      try{S.meta=await api('/api/meta');}catch{S.meta=null;}
+      await syncNotices();render();toast(`Bem-vindo, ${firstName(S.user.name)}!`,'success');
+    } catch(err) {
+      const target=root.querySelector('#login-error');if(target)target.innerHTML=`<div class="form-error">${esc(err.message)}</div>`;
+      if(button){button.disabled=false;button.innerHTML=`Entrar ${icon('arrow',18)}`;}
     }
   }
-  async function createOccurrence(form) {
-    const fd = new FormData(form);
-    const body = Object.fromEntries(fd.entries());
-    body.severity = Number(body.severity);
-    body.affected_people = Number(body.affected_people);
-    if (!body.occurred_at) delete body.occurred_at;
-    else {
-      const occurredAt = new Date(body.occurred_at);
-      if (Number.isNaN(occurredAt.getTime())) { toast('Informe uma data válida.','error'); return; }
-      body.occurred_at = occurredAt.toISOString();
-    }
-    const button = form.querySelector('button[type="submit"]'); button.disabled = true; button.textContent = 'Registrando…';
-    try {
-      const result = await api('/api/occurrences',{method:'POST',body:JSON.stringify(body)});
-      const occurrence = result.occurrence || result;
-      await syncPendingCount();
-      toast('Ocorrência registrada e enviada para validação.','success');
-      navigate(`detalhe/${occurrence.id}`);
-    } catch (err) { toast(err.message,'error'); button.disabled = false; button.innerHTML = `${icon('plus',16)} Registrar ocorrência`; }
+  function captureReport(form) { for(const [key,value] of new FormData(form).entries())S.report[key]=String(value); }
+  async function submitReport(form) {
+    captureReport(form);
+    if(S.reportStep<3){S.reportStep++;render();return;}
+    const title=`${S.report.type==='Outro'?'Ocorrência':S.report.type} em ${S.report.neighborhood}`.slice(0,120);
+    const body={title,type:S.report.type,description:S.report.description,neighborhood:S.report.neighborhood,address:S.report.address||'',severity:Number(S.report.severity||3),affected_people:Number(S.report.affected_people||0)};
+    if(S.report.occurred_at){const parsed=new Date(S.report.occurred_at);if(Number.isNaN(parsed.getTime())){toast('Informe uma data válida.','error');return;}body.occurred_at=parsed.toISOString();}
+    const button=form.querySelector('button[type="submit"]');button.disabled=true;button.textContent='Enviando…';
+    try { const data=await api('/api/occurrences',{method:'POST',body:JSON.stringify(body)});const id=data.occurrence?.id;S.report={};S.reportStep=1;toast('Relato registrado. Você pode acompanhar a análise.','success');navigate(`detalhe/${id}`); }
+    catch(err){toast(err.message,'error');button.disabled=false;button.innerHTML=`Enviar relato ${icon('arrow',15)}`;}
   }
   async function submitTransition(form) {
-    const to = form.dataset.to;
-    const fd = new FormData(form);
-    const body = {to,notes:String(fd.get('notes') || '').trim()};
-    if (to === 'Alerta emitido') body.message = String(fd.get('message') || '').trim();
-    const button = form.querySelector('button[type="submit"]'); button.disabled = true; button.textContent = 'Salvando…';
-    try {
-      const result = await api(`/api/occurrences/${encodeURIComponent(routeId())}/transition`,{method:'POST',body:JSON.stringify(body)});
-      toast(to === 'Alerta emitido' ? `Alerta emitido. ${n(result.notifications_created)} notificações criadas.` : `Estado alterado para ${to}.`,'success');
-      await Promise.all([syncNotifications(),syncPendingCount()]); render();
-    } catch (err) { toast(err.message,'error'); button.disabled = false; button.innerHTML = `Confirmar: ${transitionLabel(to)}`; }
+    const to=form.dataset.to;
+    const body={to,notes:String(new FormData(form).get('notes')||'').trim()};
+    if(to==='Alerta emitido')body.message=String(new FormData(form).get('message')||'').trim();
+    const button=form.querySelector('button[type="submit"]');button.disabled=true;button.textContent='Salvando…';
+    try { const result=await api(`/api/occurrences/${encodeURIComponent(routeId())}/transition`,{method:'POST',body:JSON.stringify(body)});toast(to==='Alerta emitido'?`Alerta enviado. ${num(result.notifications_created)} notificações criadas.`:`Estado atualizado: ${statusLabel(to)}.`,'success');await syncNotices();render(); }
+    catch(err){toast(err.message,'error');button.disabled=false;button.textContent=transitionLabel(to);}
   }
-
-  document.addEventListener('submit', event => {
-    const form = event.target;
-    if (form.id === 'login-form') { event.preventDefault(); const fd = new FormData(form); login(String(fd.get('email')),String(fd.get('password'))); }
-    if (form.id === 'occurrence-form') { event.preventDefault(); createOccurrence(form); }
-    if (form.id === 'transition-form') { event.preventDefault(); submitTransition(form); }
-    if (form.id === 'filter-form') { event.preventDefault(); const fd = new FormData(form); const search=String(fd.get('search')||''); if(search.length>100){toast('A busca aceita até 100 caracteres.','error');return;} state.filter = {search,status:String(fd.get('status')||''),risk:String(fd.get('risk')||'')}; state.page=1; render(); }
-    if (form.id === 'global-search') { event.preventDefault(); state.filter.search = String(new FormData(form).get('search') || ''); state.page=1; navigate('ocorrencias'); }
+  document.addEventListener('submit',event=>{
+    const form=event.target;
+    if(form.id==='login-form'){event.preventDefault();const fd=new FormData(form);login(String(fd.get('email')),String(fd.get('password')));}
+    if(form.id==='report-form'){event.preventDefault();submitReport(form);}
+    if(form.id==='transition-form'){event.preventDefault();submitTransition(form);}
+    if(form.id==='search-form'){event.preventDefault();S.search=String(new FormData(form).get('search')||'').slice(0,100);render();}
   });
-  document.addEventListener('click', async event => {
-    if (event.target.closest('.sidebar .nav-link, .sidebar .brand')) { root.querySelector('.app-shell')?.classList.remove('nav-open'); root.querySelector('.mobile-menu')?.setAttribute('aria-expanded','false'); }
-    const demo = event.target.closest('[data-demo]');
-    if (demo) { const role = demo.dataset.demo; login(`${role}@alertabairro.local`,demoPassword); return; }
-    const detail = event.target.closest('[data-detail]');
-    if (detail) { navigate(`detalhe/${detail.dataset.detail}`); return; }
-    const page = event.target.closest('[data-page]');
-    if (page && !page.disabled) { state.page=Math.max(1,Number(page.dataset.page)||1); render(); return; }
-    const notification = event.target.closest('[data-notification]');
-    if (notification) {
-      const item = state.notifications.find(x=>String(x.id)===notification.dataset.notification);
-      try { await api(`/api/notifications/${notification.dataset.notification}/read`,{method:'POST',body:'{}'}); await syncNotifications(); }
-      catch (err) { toast(err.message,'error'); }
-      if (item?.occurrence_id) navigate(`detalhe/${item.occurrence_id}`); else { state.notificationsOpen = false; render(); }
-      return;
-    }
-    const transition = event.target.closest('[data-transition]');
-    if (transition) { state.transitionTo = transition.dataset.transition; const slot=document.getElementById('transition-slot'); if(slot){slot.innerHTML=transitionForm(state.transitionTo);slot.scrollIntoView({block:'nearest',behavior:'smooth'});} return; }
-    const action = event.target.closest('[data-action]')?.dataset.action;
-    if (action === 'toggle-nav') { const isOpen = root.querySelector('.app-shell')?.classList.toggle('nav-open'); const button = root.querySelector('.mobile-menu'); button?.setAttribute('aria-expanded',String(Boolean(isOpen))); button?.setAttribute('aria-label',isOpen?'Fechar menu':'Abrir menu'); if(isOpen) root.querySelector('.sidebar .nav-link')?.focus(); return; }
-    if (action === 'close-nav') { root.querySelector('.app-shell')?.classList.remove('nav-open'); const button=root.querySelector('.mobile-menu'); button?.setAttribute('aria-expanded','false'); button?.setAttribute('aria-label','Abrir menu'); button?.focus(); return; }
-    if (action === 'toggle-user') { state.menuOpen = !state.menuOpen; state.notificationsOpen = false; root.querySelector('.user-menu')?.remove(); root.querySelector('.notification-popover')?.remove(); if(state.menuOpen) root.querySelector('.topbar')?.insertAdjacentHTML('beforeend',`<div class="user-menu"><button data-action="go-admin">${icon('users',15)} Perfil e permissões</button><button data-action="logout">${icon('logout',15)} Sair da conta</button></div>`); return; }
-    if (action === 'toggle-notifications') { state.notificationsOpen = !state.notificationsOpen; state.menuOpen = false; root.querySelector('.user-menu')?.remove(); root.querySelector('.notification-popover')?.remove(); if(state.notificationsOpen) root.querySelector('.topbar')?.insertAdjacentHTML('beforeend',notificationPopover()); return; }
-    if (action === 'go-admin') { navigate('administracao'); return; }
-    if (action === 'logout') {
-      try { await api('/api/auth/logout',{method:'POST',body:'{}'}); }
-      catch { /* Clear local state even if the server cannot be reached. */ }
-      logout(); return;
-    }
-    if (action === 'retry') { render(); return; }
-    if (action === 'cancel-transition') { const slot=document.getElementById('transition-slot'); if(slot)slot.innerHTML=''; return; }
+  document.addEventListener('change',event=>{
+    if(event.target.id==='neighborhood-filter'){S.neighborhood=event.target.value;localStorage.setItem('ab_neighborhood',S.neighborhood);render();}
   });
-  document.addEventListener('keydown', event => {
-    if ((event.key==='Enter'||event.key===' ') && event.target.matches('[role="link"][data-detail],tr[data-detail],[data-notification]')) {event.preventDefault();event.target.click();}
-    if (event.key === 'Escape') { root.querySelector('.app-shell')?.classList.remove('nav-open'); root.querySelector('.user-menu')?.remove(); root.querySelector('.notification-popover')?.remove(); state.menuOpen=false; state.notificationsOpen=false; const button=root.querySelector('.mobile-menu'); button?.setAttribute('aria-expanded','false'); button?.setAttribute('aria-label','Abrir menu'); }
+  document.addEventListener('click',async event=>{
+    const action=event.target.closest('[data-action]')?.dataset.action;
+    if(['more','notices','profile'].includes(action)){setPopover(action);return;}
+    if(action==='logout'){await logout();return;}
+    if(action==='retry'){render();return;}
+    if(action==='report-back'){const form=root.querySelector('#report-form');if(form)captureReport(form);S.reportStep=Math.max(1,S.reportStep-1);render();return;}
+    if(action==='cancel-transition'){const slot=root.querySelector('#transition-slot');if(slot)slot.innerHTML='';return;}
+    const demo=event.target.closest('[data-demo]');if(demo){login(`${demo.dataset.demo}@alertabairro.local`,'Demo@2026');return;}
+    const detail=event.target.closest('[data-detail]');if(detail){navigate(`detalhe/${detail.dataset.detail}`);return;}
+    const neighborhood=event.target.closest('[data-neighborhood]');if(neighborhood){S.neighborhood=neighborhood.dataset.neighborhood;localStorage.setItem('ab_neighborhood',S.neighborhood);navigate('inicio');return;}
+    const tab=event.target.closest('[data-alert-tab]');if(tab){S.alertTab=tab.dataset.alertTab;render();return;}
+    const transition=event.target.closest('[data-transition]');if(transition){S.transitionTo=transition.dataset.transition;const slot=root.querySelector('#transition-slot');if(slot){slot.innerHTML=transitionForm(S.transitionTo);slot.scrollIntoView({block:'nearest',behavior:'smooth'});}return;}
+    const notice=event.target.closest('[data-notice]');if(notice){const item=S.notices.find(x=>String(x.id)===notice.dataset.notice);try{await api(`/api/notifications/${notice.dataset.notice}/read`,{method:'POST',body:'{}'});await syncNotices();}catch(err){toast(err.message,'error');}if(item?.occurrence_id)navigate(`detalhe/${item.occurrence_id}`);else setPopover('notices');return;}
+    if(event.target.closest('#active-popover a[href^="#"]')){root.querySelector('#active-popover')?.remove();S.menu='';return;}
+    if(S.menu&&!event.target.closest('#active-popover')){root.querySelector('#active-popover')?.remove();S.menu='';}
   });
-  window.addEventListener('hashchange', () => { if (state.user) render(); });
-
+  document.addEventListener('keydown',event=>{
+    if((event.key==='Enter'||event.key===' ')&&event.target.matches('[data-notice]')){event.preventDefault();event.target.click();}
+    if(event.key==='Escape'){root.querySelector('#active-popover')?.remove();S.menu='';}
+  });
+  window.addEventListener('hashchange',()=>{if(S.user)render();});
   async function init() {
-    if (!state.token) { renderLogin(); return; }
-    root.innerHTML = loading();
-    try {
-      const result = await api('/api/auth/me'); state.user = result.user;
-      try { state.meta = await api('/api/meta'); } catch { state.meta = null; }
-      await Promise.all([syncNotifications(),syncPendingCount()]); render();
-    } catch { logout(false); }
+    if(!S.token){loginPage();return;}
+    root.innerHTML=loading();
+    try { const data=await api('/api/auth/me');S.user=data.user;try{S.meta=await api('/api/meta');}catch{S.meta=null;}await syncNotices();render(); }
+    catch { clearSession(); }
   }
   init();
 })();

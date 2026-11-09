@@ -6,7 +6,7 @@ Protótipo web de apoio à comunicação comunitária de ocorrências locais, de
 
 ## Tecnologias
 
-- **Interface:** HTML5, CSS3 e JavaScript, com navegação por hash e chamadas `fetch` à API.
+- **Interface:** HTML5, CSS3 e JavaScript, com layout mobile-first, navegação por hash e chamadas `fetch` à API.
 - **Servidor e API:** Python 3.11 ou superior, biblioteca padrão (`http.server`, `sqlite3` e módulos de segurança).
 - **Dados:** SQLite local.
 - **Testes:** `unittest`, sem serviço externo obrigatório.
@@ -92,13 +92,15 @@ Estas contas servem apenas para execução local. O agente e o gestor podem muda
 
 ## Telas e fluxo de demonstração
 
-A navegação dá acesso a **dez telas**: Dashboard, Mapa, Ocorrências, Registrar ocorrência, Detalhe da ocorrência (a partir das listas), Fila de validação, Alertas, Monitoramento, Fontes e confiança e Administração. O login é exibido no início da sessão.
+A interface prioriza o morador no celular. A navegação inferior reúne **Início** (`#inicio`), **Alertas** (`#alertas`), **Registrar** (`#registrar`, formulário em três etapas curtas) e **Acompanhar** (`#acompanhar`). O menu **Mais** abre **Ocorrências** (`#ocorrencias`), **Mapa** (`#mapa`) e **Origem e confiança** (`#fontes`). Cartões e listas abrem o **Detalhe da ocorrência** (`#detalhe/:id`). Agente e gestor acessam ainda a **Fila de validação** (`#fila`) e **Monitoramento** (`#monitoramento`); **Administração** (`#administracao`) é exclusiva do gestor. São **onze telas navegáveis**, além do login.
 
-1. Entre como **morador**, abra **Registrar ocorrência** e salve um relato. O detalhe mostra o estado `Registrado`, risco, origem e confiança.
+O Início apresenta “O que acontece no meu bairro?”, filtro por bairro e alertas ativos. O mapa é esquemático. Os estados aparecem para o morador em linguagem simples: `Registrado` como **Recebido**, `Em validação` como **Em análise**, `Alerta emitido` como **Alerta enviado**, `Em monitoramento` como **Em acompanhamento**, `Encerrado` como **Resolvido** e `Descartado` como **Não confirmado**. A API e o banco mantêm os nomes canônicos documentados no diagrama de estados.
+
+1. Entre como **morador**, consulte os alertas do bairro em **Início** e registre um relato nas três etapas de **Registrar**. Abra **Acompanhar** para ver o novo registro como **Recebido**.
 2. Entre como **agente**, abra **Fila de validação** e altere o relato para `Em validação` e `Confirmado`. O caminho alternativo permite `Descartado` com justificativa.
 3. Emita o alerta de uma ocorrência confirmada. A aplicação cria o alerta e notificações internas.
-4. Consulte **Alertas** e o detalhe; depois avance para `Em monitoramento` e `Encerrado`.
-5. Volte ao **Dashboard** para ver os indicadores atualizados a partir da API.
+4. Volte como **morador**, consulte **Alertas** e abra o detalhe para ver origem, risco, confiança e histórico.
+5. Como agente ou gestor, avance para `Em monitoramento` e `Encerrado`. Confira o resultado em **Início** e **Acompanhar**.
 
 O ciclo completo e as condições de cada transição estão em [Arquitetura](docs/arquitetura.md). Os requisitos e critérios de aceite estão em [Requisitos](docs/requisitos.md).
 
@@ -130,7 +132,7 @@ python -m unittest discover -s tests -v
 
 Os testes cobrem validação do registro, pontuações, máquina de estados, permissões, notificações e rotas principais. A integração HTTP usa banco temporário e não altera o arquivo demonstrativo em `data/`.
 
-**Verificação desta entrega:** o comando acima foi executado no Windows e os **16 testes passaram**, incluindo requisições HTTP locais à API e revogação da sessão após logout. Também foram verificadas a inicialização do banco e a carga demonstrativa. A execução automatizada não substitui a revisão visual das telas.
+**Verificação do back-end:** o comando acima foi executado no Windows e os **16 testes passaram**, incluindo requisições HTTP locais à API e revogação da sessão após logout. Também foram verificadas a inicialização do banco e a carga demonstrativa. A interface reformulada requer revisão visual separada.
 
 ## Diagramas e vídeo
 
@@ -150,8 +152,16 @@ Os testes cobrem validação do registro, pontuações, máquina de estados, per
 
 ## Capturas de tela
 
-Nenhuma captura da aplicação foi obtida nesta execução. A aprovação de acesso do navegador de pré-visualização ao servidor `localhost` foi rejeitada no ambiente de trabalho; por isso, não foi possível realizar a revisão visual da interface nem registrar imagens do dashboard e dos fluxos. Os diagramas SVG acima estão disponíveis como imagens da documentação. Para completar essa verificação, execute o servidor localmente, abra a aplicação no navegador e confira desktop, celular e os fluxos de morador, agente e gestor.
+Nenhuma captura da aplicação foi obtida nesta execução. A aprovação de acesso do navegador de pré-visualização ao servidor `localhost` foi rejeitada no ambiente de trabalho; por isso, não foi possível realizar a revisão visual da interface nem registrar imagens do Início e dos fluxos. Os diagramas SVG acima estão disponíveis como imagens da documentação. Para completar essa verificação, execute o servidor localmente, abra a aplicação no navegador e confira desktop, celular e os fluxos de morador, agente e gestor.
 
 ## Preparação para GitHub
 
 O repositório inclui `.gitignore` para banco local, ambiente e arquivos temporários. A pasta `.github/workflows/` contém a rotina de testes automatizados. Antes de publicar, confira se `.env` e o arquivo SQLite não foram adicionados ao commit.
+
+## Aplicativo no celular (PWA)
+
+A interface tem quatro atalhos principais: Início, Alertas, Registrar e Acompanhar. O registro ocorre em três etapas. O manifesto, os ícones e o service worker permitem instalação em navegadores compatíveis quando servido por HTTPS (ou localhost no desenvolvimento). O botão de instalação aparece quando o navegador oferece essa opção. No iPhone, use Compartilhar → Adicionar à Tela de Início.
+
+Para testar a interface em outro aparelho na mesma rede, configure `ALERTABAIRRO_HOST=0.0.0.0` e abra `http://IP-DO-COMPUTADOR:8000` no celular. O computador precisa continuar ligado e a rede/firewall deve permitir a conexão. HTTP pela rede local serve para testar a interface; a instalação PWA requer hospedagem HTTPS. O repositório GitHub contém o código, não hospeda a API Python.
+
+Somente os arquivos públicos da interface são armazenados no cache. Login, registros e alertas dependem de conexão com a API; não há envio offline. A instalação em Android/iOS ainda precisa ser validada em um aparelho real. Não foi gerado APK nem pacote da App Store. Referência: https://developer.mozilla.org/en-US/docs/Web/Progressive_web_apps/Guides/Making_PWAs_installable

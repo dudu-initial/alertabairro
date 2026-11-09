@@ -12,7 +12,7 @@ Fontes editáveis: [Mermaid](diagramas/arquitetura.mmd). Os diagramas de [sequê
 
 | Camada | Responsabilidade no protótipo | Comunicação |
 | --- | --- | --- |
-| Apresentação | SPA em HTML, CSS e JavaScript; dashboard, mapa e fluxos de morador/agente/gestor | Requisições `fetch` para `/api`; token Bearer |
+| Apresentação | SPA mobile-first em HTML, CSS e JavaScript; barra inferior do morador, menu Mais, formulário em três etapas, detalhes e área de trabalho da equipe | Requisições `fetch` para `/api`; token Bearer |
 | Aplicação e regras de negócio | Validação de entradas; cálculo de risco/confiança; autorização; transições permitidas | Chamadas internas no servidor Python |
 | Persistência e dados | Usuários, ocorrências, histórico de estados, alertas e notificações | SQLite com arquivo local configurável |
 | Fontes externas | Catálogo/identificação de origens exibido na interface; dados demonstrativos | Sem coleta automática de serviços externos nesta versão |
@@ -23,10 +23,10 @@ Fontes editáveis: [Mermaid](diagramas/arquitetura.mmd). Os diagramas de [sequê
 ## Fluxo de dados
 
 1. O usuário entra com credenciais locais. A API identifica perfil e autoriza as ações em cada rota protegida.
-2. O morador preenche uma ocorrência. A API valida dados, calcula risco e confiança e persiste o registro em `Registrado`.
-3. O agente consulta a fila, lê o detalhe e muda o estado. A API verifica perfil, estado atual e condições da transição antes de escrever o novo estado e o histórico.
+2. O morador consulta Início com filtro de bairro, abre alertas e preenche uma ocorrência em três etapas. A API valida dados, calcula risco e confiança e persiste o registro em `Registrado`; a interface o apresenta como **Recebido**.
+3. O agente consulta a Fila de validação, lê o detalhe e muda o estado. A API verifica perfil, estado atual e condições da transição antes de escrever o novo estado e o histórico.
 4. Ao emitir um alerta de ocorrência confirmada, a aplicação persiste o alerta e as notificações internas associadas.
-5. O painel consulta a API, portanto seus números acompanham os registros salvos no SQLite.
+5. Início e Acompanhar consultam a API, portanto seus dados acompanham os registros salvos no SQLite.
 
 ![Diagrama de sequência](diagramas/sequencia.svg)
 
@@ -51,6 +51,20 @@ Arquivos editáveis: [Mermaid](diagramas/estados.mmd) · [PlantUML](diagramas/es
 | Em monitoramento | Encerrar | Agente ou gestor | Encerrado | Registrar fechamento |
 
 `Descartado` e `Encerrado` terminam o fluxo demonstrativo. Uma transição fora da tabela é rejeitada pela API.
+
+### Nomes exibidos ao morador
+
+Os diagramas e o banco usam os valores canônicos da API. A interface do morador apresenta rótulos mais simples, sem alterar a máquina de estados:
+
+| Estado na API | Rótulo na interface do morador |
+| --- | --- |
+| Registrado | Recebido |
+| Em validação | Em análise |
+| Confirmado | Confirmado |
+| Alerta emitido | Alerta enviado |
+| Em monitoramento | Em acompanhamento |
+| Encerrado | Resolvido |
+| Descartado | Não confirmado |
 
 ## Regras de pontuação
 

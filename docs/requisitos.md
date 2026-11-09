@@ -10,19 +10,19 @@ O sistema **não substitui** serviços de emergência, órgãos de defesa civil 
 
 | Perfil | Necessidade principal | Permissões previstas |
 | --- | --- | --- |
-| Morador | Informar uma ocorrência e acompanhar seu andamento | Consultar painel e ocorrências; registrar; ler notificações próprias |
-| Agente | Avaliar relatos e orientar a resposta | Consultar fila; validar ou descartar; emitir alerta e acompanhar estados |
-| Gestor | Supervisionar os indicadores e a operação | Acesso às áreas administrativas e às transições de agente |
+| Morador | Entender o que ocorre no bairro, informar um fato e acompanhar a resposta | Consultar Início, Alertas, Acompanhar e páginas secundárias; registrar; ler notificações próprias |
+| Agente | Avaliar relatos e orientar a resposta | Consultar Fila de validação; validar ou descartar; emitir alerta e acompanhar estados |
+| Gestor | Supervisionar os indicadores e a operação | Acesso à Administração e às transições de agente |
 
 ## Requisitos funcionais
 
 | ID | Requisito | Critério de aceite |
 | --- | --- | --- |
 | RF01 | Autenticar usuários locais de demonstração | Credenciais válidas retornam sessão; credenciais inválidas são rejeitadas |
-| RF02 | Exibir painel com dados reais da aplicação | Indicadores e lista usam a API e refletem uma ocorrência recém-criada |
-| RF03 | Permitir navegação por todas as telas | Cada área do menu abre sua tela em desktop e em largura móvel |
-| RF04 | Registrar ocorrência comunitária | Dados obrigatórios são validados e um registro persiste no banco |
-| RF05 | Listar e detalhar ocorrências | Estado, tipo, bairro, risco, origem, confiança e histórico ficam visíveis |
+| RF02 | Exibir Início com dados da aplicação | Alertas ativos, indicadores e ocorrências usam a API e refletem uma ocorrência recém-criada; o morador pode filtrar por bairro |
+| RF03 | Permitir navegação por todas as telas | Navegação inferior acessa quatro destinos principais do morador; Mais abre páginas secundárias; cartões levam ao detalhe; área da equipe é acessível ao perfil correspondente |
+| RF04 | Registrar ocorrência comunitária | Formulário móvel em três etapas curtas valida dados obrigatórios e persiste um registro no banco |
+| RF05 | Listar, acompanhar e detalhar ocorrências | Estado, tipo, bairro, risco, origem, confiança e histórico ficam visíveis; Acompanhar dá acesso aos relatos do morador |
 | RF06 | Classificar risco | Uma regra reproduzível produz pontuação e nível de risco para cada ocorrência |
 | RF07 | Calcular confiança | Uma regra reproduzível produz pontuação de confiança e indica a fonte |
 | RF08 | Controlar o ciclo de estados | Somente transições permitidas são aceitas; o histórico registra cada mudança |
@@ -31,12 +31,13 @@ O sistema **não substitui** serviços de emergência, órgãos de defesa civil 
 | RF11 | Consultar notificações internas | O usuário vê suas notificações e pode marcá-las como lidas |
 | RF12 | Exibir fontes e confiança | A interface explica as origens e mostra pontuações junto às ocorrências |
 | RF13 | Disponibilizar dados demonstrativos | Um comando prepara usuários e ocorrências locais para a apresentação |
+| RF14 | Exibir o andamento em linguagem simples | A interface do morador traduz os estados técnicos sem mudar os valores persistidos pela API |
 
 ## Requisitos não funcionais
 
 | ID | Requisito | Verificação proposta |
 | --- | --- | --- |
-| RNF01 | Interface responsiva e consistente | Inspecionar navegação, formulário e cartões em desktop e celular |
+| RNF01 | Interface mobile-first, responsiva e consistente | Inspecionar barra inferior, formulário em três etapas, cartões, menu Mais e área da equipe em celular e desktop |
 | RNF02 | Persistência local | Reiniciar o processo e confirmar que registros permanecem no SQLite |
 | RNF03 | Controle de acesso no servidor | Repetir ações protegidas com perfis diferentes e sem token |
 | RNF04 | Proteção básica de dados | Não expor senha em texto claro; não incluir segredos no repositório |
@@ -58,9 +59,9 @@ O sistema **não substitui** serviços de emergência, órgãos de defesa civil 
 
 ### HU01 — Registro comunitário
 
-Como morador, quero informar tipo, localização, gravidade e descrição de um evento para que o agente tenha dados suficientes para triagem.
+Como morador, quero informar tipo, localização, gravidade e descrição de um evento em poucas etapas para que o agente tenha dados suficientes para triagem.
 
-**Dado** um usuário autenticado e campos válidos, **quando** enviar o formulário, **então** o sistema salva a ocorrência em `Registrado` e mostra seu detalhe. Campos inválidos recebem erro sem criar registro.
+**Dado** um usuário autenticado, **quando** completar as três etapas curtas de Registrar com campos válidos, **então** o sistema salva a ocorrência em `Registrado` e permite acompanhá-la como **Recebido**. Campos inválidos recebem erro sem criar registro.
 
 ### HU02 — Validação
 
@@ -76,25 +77,32 @@ Como agente, quero emitir um alerta de ocorrência confirmada para avisar morado
 
 ### HU04 — Transparência
 
-Como morador, quero ver a origem, o nível de risco, a confiança e o histórico para entender por que um relato merece atenção.
+Como morador, quero abrir um alerta ou uma ocorrência e ver a origem, o nível de risco, a confiança e o histórico para entender por que um relato merece atenção.
 
 **Dado** uma ocorrência listada, **quando** abrir o detalhe, **então** a interface apresenta esses atributos e as mudanças de estado disponíveis na API.
+
+### HU05 — Visão do bairro
+
+Como morador, quero filtrar o Início por bairro e acessar rapidamente Alertas e Acompanhar para localizar informações relevantes na tela do celular.
+
+**Dado** um usuário autenticado, **quando** escolher um bairro, **então** a visão inicial usa os dados da aplicação para apresentar os registros correspondentes. A barra inferior mantém Início, Alertas, Registrar e Acompanhar acessíveis.
 
 ## Matriz de rastreabilidade
 
 | Área navegável | Requisitos principais |
 | --- | --- |
-| Dashboard | RF02, RF05, RF06, RF07 |
-| Mapa | RF03, RF05 |
-| Ocorrências | RF05, RF06, RF07 |
-| Registrar ocorrência | RF04 |
-| Detalhe da ocorrência | RF05, RF08, RF12 |
-| Fila de validação | RF08, RF09 |
-| Alertas | RF10, RF11 |
-| Monitoramento | RF08, RF10 |
-| Fontes e confiança | RF07, RF12 |
-| Administração | RF01, RF09, RF13 |
+| Início (`#inicio`) | RF02, RF05, RF06, RF07 |
+| Alertas (`#alertas`) | RF10, RF11 |
+| Registrar (`#registrar`) | RF04 |
+| Acompanhar (`#acompanhar`) | RF05, RF14 |
+| Ocorrências (`#ocorrencias`) | RF05, RF06, RF07 |
+| Mapa (`#mapa`) | RF03, RF05 |
+| Origem e confiança (`#fontes`) | RF07, RF12 |
+| Detalhe (`#detalhe/:id`) | RF05, RF08, RF12, RF14 |
+| Fila de validação (`#fila`) | RF08, RF09 |
+| Monitoramento (`#monitoramento`) | RF08, RF10 |
+| Administração (`#administracao`) | RF01, RF09, RF13 |
 
 ## Escopo de demonstração
 
-O fluxo de avaliação recomendado é: entrar como morador, registrar ocorrência, entrar como agente, iniciar validação, confirmar, emitir alerta, consultar notificação, iniciar monitoramento e encerrar. O caminho alternativo mostra um segundo relato descartado com justificativa.
+O fluxo de avaliação recomendado começa em **Início** no celular: filtrar o bairro, abrir um alerta, registrar ocorrência em três etapas e vê-la em **Acompanhar** como **Recebido**. Depois, entrar como agente, iniciar validação na **Fila**, confirmar, emitir alerta e consultar a notificação no perfil do morador. Por fim, iniciar monitoramento e encerrar. O caminho alternativo mostra um segundo relato descartado com justificativa, exibido ao morador como **Não confirmado**.
