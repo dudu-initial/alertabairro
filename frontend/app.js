@@ -92,7 +92,21 @@
   }
   function loginPage() {
     document.title='Entrar · AlertaBairro';
-    root.innerHTML=`<div class="login"><div class="login-wrap"><div class="login-brand"><span class="brand-mark">${icon('activity',22)}</span>AlertaBairro</div><section class="login-card"><div class="kicker">Comunidade mais informada</div><h1>Bem-vindo ao seu bairro.</h1><p>Veja alertas, registre o que acontece e acompanhe as respostas em um só lugar.</p><form id="login-form" class="login-form"><div class="field"><label for="login-email">E-mail</label><input id="login-email" name="email" type="email" autocomplete="username" required placeholder="voce@exemplo.com"></div><div class="field"><label for="login-password">Senha</label><input id="login-password" name="password" type="password" autocomplete="current-password" required placeholder="Sua senha"></div><div id="login-error"></div><button class="btn btn-primary btn-large btn-block" type="submit">Entrar ${icon('arrow',18)}</button></form><div class="demo-title">Explorar com conta de demonstração</div><div class="demo-grid"><button data-demo="morador">Morador</button><button data-demo="agente">Agente</button><button data-demo="gestor">Gestor</button></div></section><p class="login-foot">Protótipo acadêmico · Global Solution FIAP 2026.2</p></div></div>`;
+    root.innerHTML=`<div class="login"><div class="login-wrap"><div class="login-brand"><span class="brand-mark">${icon('activity',22)}</span>AlertaBairro</div><section class="login-card"><div class="kicker">Comunidade mais informada</div><h1>Bem-vindo ao seu bairro.</h1><p>Veja alertas, registre o que acontece e acompanhe as respostas em um só lugar.</p><form id="login-form" class="login-form"><div class="field"><label for="login-email">E-mail</label><input id="login-email" name="email" type="email" autocomplete="username" required placeholder="voce@exemplo.com"></div><div class="field"><label for="login-password">Senha</label><input id="login-password" name="password" type="password" autocomplete="current-password" required placeholder="Sua senha"></div><div id="login-error"></div><button class="btn btn-primary btn-large btn-block" type="submit">Entrar ${icon('arrow',18)}</button></form><button type="button" class="btn btn-secondary btn-block" style="margin-top:16px" data-action="register-account">Criar minha conta</button><div class="demo-title">Explorar com conta de demonstração</div><div class="demo-grid"><button data-demo="morador">Morador</button><button data-demo="agente">Agente</button><button data-demo="gestor">Gestor</button></div></section><p class="login-foot">Protótipo acadêmico · Global Solution FIAP 2026.2</p></div></div>`;
+  }
+  function registrationPage() {
+    root.innerHTML=`<div class="login"><div class="login-wrap"><section class="login-card"><div class="kicker">AlertaBairro</div><h1>Crie sua conta</h1><p>Cadastre-se como morador para registrar e acompanhar ocorrências.</p><form id="registration-form" class="login-form"><div class="field"><label for="reg-name">Seu nome</label><input id="reg-name" name="name" autocomplete="name" required minlength="2" maxlength="100"></div><div class="field"><label for="reg-email">E-mail</label><input id="reg-email" name="email" type="email" autocomplete="email" required maxlength="254"></div><div class="field"><label for="reg-password">Senha</label><input id="reg-password" name="password" type="password" autocomplete="new-password" required minlength="8" maxlength="128"><small>Use pelo menos 8 caracteres.</small></div><div class="field"><label for="reg-confirm">Repita a senha</label><input id="reg-confirm" name="confirm" type="password" autocomplete="new-password" required minlength="8" maxlength="128"></div><div id="registration-error" role="alert"></div><button class="btn btn-primary btn-large" type="submit">Criar conta</button><button class="btn btn-secondary" type="button" data-action="back-login">Já tenho uma conta</button></form></section></div></div>`;
+  }
+  async function registerAccount(form) {
+    const values=Object.fromEntries(new FormData(form));
+    const error=root.querySelector('#registration-error');
+    if(values.password!==values.confirm){error.textContent='As senhas precisam ser iguais.';return;}
+    const button=form.querySelector('[type="submit"]');button.disabled=true;button.textContent='Criando conta…';
+    try {
+      await api('/api/auth/register',{method:'POST',body:JSON.stringify({name:values.name,email:values.email,password:values.password})});
+      loginPage();root.querySelector('#login-email').value=values.email;
+      toast('Conta criada! Entre com seu e-mail e senha.','success');
+    } catch(err){error.textContent=err.message;button.disabled=false;button.textContent='Criar conta';}
   }
   function alertCard(a) { return `<article class="alert-card"><div class="alert-top"><span class="alert-icon">${icon('bell',17)}</span>${pill(a.status)}</div><div><h3>${esc(a.title||'Alerta no bairro')}</h3><p>${esc(a.message)}</p></div><div class="alert-foot"><span>${icon('pin',13)} ${esc(a.neighborhood)} · ${date(a.created_at)}</span><a class="text-link" href="#detalhe/${esc(a.occurrence_id)}">Ver detalhes ${icon('arrow',13)}</a></div></article>`; }
   function occurrenceItem(o) { return `<button class="list-item" data-detail="${esc(o.id)}"><span class="list-icon">${icon('pin',18)}</span><span class="item-main"><span class="item-title">${esc(o.title)}</span><span class="item-sub">${esc(o.neighborhood)} · ${date(o.created_at)}</span></span>${pill(o.status)}<span class="chev">${icon('chevron',15)}</span></button>`; }
@@ -227,6 +241,7 @@
   }
   document.addEventListener('submit',event=>{
     const form=event.target;
+    if(form.id==='registration-form'){event.preventDefault();registerAccount(form);return;}
     if(form.id==='login-form'){event.preventDefault();const fd=new FormData(form);login(String(fd.get('email')),String(fd.get('password')));}
     if(form.id==='report-form'){event.preventDefault();submitReport(form);}
     if(form.id==='transition-form'){event.preventDefault();submitTransition(form);}
@@ -238,6 +253,8 @@
   document.addEventListener('click',async event=>{
     const action=event.target.closest('[data-action]')?.dataset.action;
     if(['more','notices','profile'].includes(action)){setPopover(action);return;}
+    if(action==='register-account'){registrationPage();return;}
+    if(action==='back-login'){loginPage();return;}
     if(action==='logout'){await logout();return;}
     if(action==='retry'){render();return;}
     if(action==='report-back'){const form=root.querySelector('#report-form');if(form)captureReport(form);S.reportStep=Math.max(1,S.reportStep-1);render();return;}

@@ -132,7 +132,7 @@ python -m unittest discover -s tests -v
 
 Os testes cobrem validação do registro, pontuações, máquina de estados, permissões, notificações e rotas principais. A integração HTTP usa banco temporário e não altera o arquivo demonstrativo em `data/`.
 
-**Verificação do back-end:** o comando acima foi executado no Windows e os **16 testes passaram**, incluindo requisições HTTP locais à API e revogação da sessão após logout. Também foram verificadas a inicialização do banco e a carga demonstrativa. A interface reformulada requer revisão visual separada.
+**Verificação do back-end:** o comando acima foi executado no Windows e os **18 testes passaram**, incluindo requisições HTTP locais à API e revogação da sessão após logout. Também foram verificadas a inicialização do banco e a carga demonstrativa. A interface reformulada requer revisão visual separada.
 
 ## Diagramas e vídeo
 
@@ -165,3 +165,7 @@ A interface tem quatro atalhos principais: Início, Alertas, Registrar e Acompan
 Para testar a interface em outro aparelho na mesma rede, configure `ALERTABAIRRO_HOST=0.0.0.0` e abra `http://IP-DO-COMPUTADOR:8000` no celular. O computador precisa continuar ligado e a rede/firewall deve permitir a conexão. HTTP pela rede local serve para testar a interface; a instalação PWA requer hospedagem HTTPS. O repositório GitHub contém o código, não hospeda a API Python.
 
 Somente os arquivos públicos da interface são armazenados no cache. Login, registros e alertas dependem de conexão com a API; não há envio offline. A instalação em Android/iOS ainda precisa ser validada em um aparelho real. Não foi gerado APK nem pacote da App Store. Referência: https://developer.mozilla.org/en-US/docs/Web/Progressive_web_apps/Guides/Making_PWAs_installable
+
+## Cadastro de moradores
+
+Na tela de login, escolha **Criar minha conta**. Informe nome, e-mail e uma senha de 8 a 128 caracteres e confirme a senha. Após o cadastro, entre com suas credenciais. `POST /api/auth/register` persiste o usuário com senha PBKDF2; e-mails duplicados são rejeitados. O cadastro público cria somente moradores. Não há confirmação de e-mail nem recuperação de senha nesta versão.

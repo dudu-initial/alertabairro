@@ -57,6 +57,25 @@ class APITests(unittest.TestCase):
             parsed = json.loads(raw) if raw else {}
             return response.status, parsed
 
+    def test_registration_and_login(self):
+        payload = {"name": "Nova Moradora", "email": "nova@example.com", "password": "SenhaSegura123"}
+        code, body = self.request("POST", "/api/auth/register", payload)
+        self.assertEqual(code, 201, body)
+        self.assertEqual(body["user"]["role"], "morador")
+        self.assertNotIn("password", body["user"])
+        code, session = self.request("POST", "/api/auth/login", {"email": payload["email"], "password": payload["password"]})
+        self.assertEqual(code, 200)
+        self.assertEqual(self.request("GET", "/api/auth/me", token=session["token"])[0], 200)
+        self.assertEqual(self.request("GET", "/api/users", token=session["token"])[0], 403)
+        self.assertEqual(self.request("POST", "/api/auth/register", {**payload, "email": "NOVA@example.com"})[0], 409)
+        self.assertEqual(self.request("POST", "/api/auth/login", {"email": payload["email"], "password": "incorreta"})[0], 401)
+
+    def test_registration_validation(self):
+        valid = {"name": "Morador", "email": "valid@example.com", "password": "SenhaSegura123"}
+        for changes in ({"name": "A"}, {"email": "invalido"}, {"password": "123"}, {"role": "gestor"}):
+            with self.subTest(changes=changes):
+                self.assertEqual(self.request("POST", "/api/auth/register", {**valid, **changes})[0], 400)
+
     def create_report(self, role="morador"):
         code, body = self.request("POST", "/api/occurrences", VALID_REPORT, role)
         self.assertEqual(code, 201, body)

@@ -17,7 +17,7 @@ import sqlite3
 from datetime import datetime, timedelta, timezone
 from urllib.parse import parse_qs, urlparse
 
-from .db import db_session, default_db_path, seed_database, utc_now, verify_password
+from .db import db_session, default_db_path, seed_database, utc_now, verify_password, make_password
 from .domain import (
     RISKS, STATUSES, TRANSITIONS, TRANSITION_EVENTS, TYPES,
     ValidationError, calculate_confidence, can_transition, classify_risk,
@@ -167,6 +167,8 @@ def make_handler(db_path: Path):
                     return
                 if path == "/api/auth/login" and method == "POST":
                     return self.login()
+                if path == "/api/auth/register" and method == "POST":
+                    return self.register()
                 if path == "/api/meta" and method == "GET":
                     self.send_json(200, {
                         "types": TYPES, "statuses": STATUSES, "risks": RISKS,
@@ -231,6 +233,30 @@ def make_handler(db_path: Path):
                 self._pending_json = None
                 if pending is not None:
                     self.send_json(*pending)
+
+        def register(self) -> None:
+            body = self.read_json()
+            name, email, password = body.get("name"), body.get("email"), body.get("password")
+            if not all(isinstance(value, str) for value in (name, email, password)):
+                raise APIError(400, "Informe nome, e-mail e senha.")
+            name = " ".join(name.split())
+            email = email.strip().lower()
+            if not 2 <= len(name) <= 100:
+                raise APIError(400, "O nome deve conter entre 2 e 100 caracteres.")
+            if len(email) > 254 or not re.fullmatch(r"[^\s@]+@[^\s@]+\.[^\s@]+", email):
+                raise APIError(400, "Informe um e-mail válido.")
+            if not 8 <= len(password) <= 128 or not password.strip():
+                raise APIError(400, "A senha deve conter entre 8 e 128 caracteres.")
+            if body.get("role", "morador") != "morador":
+                raise APIError(400, "O cadastro público permite somente contas de morador.")
+            with db_session(db_path) as conn:
+                if conn.execute("SELECT id FROM users WHERE email=?", (email,)).fetchone():
+                    raise APIError(409, "Já existe uma conta com este e-mail. Entre com sua senha.")
+                cursor = conn.execute(
+                    "INSERT INTO users(name,email,role,password_hash,created_at) VALUES (?,?,?,?,?)",
+                    (name, email, "morador", make_password(password), utc_now()),
+                )
+                self.send_json(201, {"user": {"id": cursor.lastrowid, "name": name, "email": email, "role": "morador"}})
 
         def login(self) -> None:
             body = self.read_json()
