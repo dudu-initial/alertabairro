@@ -535,3 +535,12 @@ input,select,textarea { font-size:16px; }
 .people-estimate[hidden] { display:none; }
 .people-field small { display:block; font-size:14px; color:var(--muted); }
 @media(forced-colors:active) { .urgency-grid .choice input:checked+span { border:3px solid Highlight; } }
+
+.delete-card { border:1px solid #DBADB2; }
+.delete-card summary { cursor:pointer; min-height:48px; padding:10px 0; font-weight:700; color:#8E222B; }
+.delete-confirmation { padding-top:12px; }
+.delete-confirmation p { overflow-wrap:anywhere; }
+.delete-confirmation .btn-row { flex-wrap:wrap; }
+.delete-confirmation .btn { flex:1 1 150px; }
+#delete-error { color:#8E222B; margin:12px 0 0; }
+#delete-error:empty { display:none; }

@@ -105,3 +105,7 @@ Essas ideias descrevem caminhos de evolução; não são apresentadas como recur
 ### Quantidade desconhecida de pessoas
 
 `affected_people: null` representa quantidade desconhecida na API. O banco mantém o campo legado não nulo e acrescenta `affected_people_unknown` com migração aditiva e idempotente. Quando a flag é 1, o valor numérico legado é apenas um preenchimento interno e a API sempre retorna `null`. Registros antigos preservam suas contagens. Quantidade desconhecida não acrescenta bônus populacional ao cálculo de risco; não equivale à confirmação de zero afetados.
+
+### Exclusão administrativa
+
+`DELETE /api/occurrences/:id` exige agente ou gestor e executa uma única exclusão transacional. As chaves estrangeiras `ON DELETE CASCADE` removem histórico, alertas, notificações e `vision_assessments`. A resposta 200 é enviada após o commit; nova consulta retorna 404. O frontend exige confirmação com título e identificador e atualiza a listagem e notificações após sucesso. Testes usam banco temporário para verificar permissões, integridade referencial, atualização dos indicadores e preservação de outras ocorrências.

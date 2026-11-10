@@ -120,3 +120,8 @@ O fluxo de avaliação recomendado começa em **Início** no celular: filtrar o 
 - RF19: preencher automaticamente o tipo e uma descrição inicial após classificação visual conclusiva; preservar edições manuais; considerar revisão apenas ao tocar em Continuar; não emitir alerta automaticamente.
 - RF20: registrar metadados da sugestão no detalhe da ocorrência, separados da confiança, sem armazenar imagem.
 - RNF: encerrar câmera ao sair da tela, manter cadastro manual em falhas, exibir tamanho do primeiro download e limitar entradas/tempo de análise. [Critérios e testes](ia-camera.md).
+
+## Exclusão pela equipe
+
+- RF21: permitir que agente e gestor excluam uma ocorrência em qualquer estado, após confirmação que identifique o registro e as consequências. A API deve impedir a ação para morador e usuário sem sessão.
+- A exclusão remove também histórico, alerta, notificações e metadados de IA vinculados, mantendo outros registros e usuários. É uma operação administrativa fora da máquina de estados; descartar continua sendo a alternativa que preserva o histórico.

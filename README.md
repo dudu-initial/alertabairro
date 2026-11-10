@@ -120,6 +120,7 @@ O ciclo completo e as condições de cada transição estão em [Arquitetura](do
 | `POST` | `/api/notifications/:id/read` | Marcar aviso como lido |
 | `GET` | `/api/sources` | Origens demonstrativas |
 | `GET` | `/api/users` | Usuários da demonstração, conforme permissão |
+| `DELETE` | `/api/occurrences/:id` | Excluir ocorrência; somente agente e gestor |
 | `GET` | `/api/neighborhoods?q=vila` | Busca pública de nomes reais de São Paulo |
 | `GET` | `/api/meta`, `/api/health` | Metadados e saúde da aplicação |
 
@@ -136,7 +137,7 @@ node --test tests/*.test.cjs
 
 Os testes cobrem validação do registro, pontuações, máquina de estados, permissões, notificações e rotas principais. A integração HTTP usa banco temporário e não altera o arquivo demonstrativo em `data/`.
 
-**Verificação do back-end:** o comando acima foi executado no Windows e os **33 testes Python e 15 testes Node passaram**, incluindo requisições HTTP locais à API e revogação da sessão após logout. Também foram verificadas a inicialização do banco e a carga demonstrativa. A interface reformulada requer revisão visual separada.
+**Verificação do back-end:** o comando acima foi executado no Windows e os **35 testes Python e 15 testes Node passaram**, incluindo requisições HTTP locais à API e revogação da sessão após logout. Também foram verificadas a inicialização do banco e a carga demonstrativa. A interface reformulada requer revisão visual separada.
 
 ## Diagramas e vídeo
 
@@ -194,3 +195,7 @@ npm run test:vision
 Os arquivos grandes baixados pelo teste ficam em `.cache/`, ignorada pelo Git. `npm ci` não é necessário para rodar a API Python ou abrir a aplicação. [Funcionamento, arquitetura, fontes, testes e limites da IA](docs/ia-camera.md).
 
 Na etapa de urgência, Baixa usa verde, Média amarelo e Alta vermelho, com texto e marca de seleção. Pessoas afetadas permite **Não sei** (padrão) ou **Informar quantidade**. A API aceita `affected_people: null` para desconhecido e mantém `0` como uma estimativa explícita de nenhuma pessoa. No detalhe, desconhecido aparece como **Não informado**.
+
+## Exclusão de ocorrências pela equipe
+
+Agente e gestor podem acessar **Todas as ocorrências**, abrir um registro e expandir **Excluir ocorrência**. A confirmação mostra o número e o título do registro; **Cancelar** mantém os dados. **Excluir definitivamente** apaga a ocorrência e, na mesma transação, seu histórico, alerta, notificações e metadados de IA. A ação está disponível em qualquer estado e não pode ser desfeita. Moradores não recebem o controle e a API rejeita suas tentativas com 403. Requisições sem sessão recebem 401; registro inexistente recebe 404.

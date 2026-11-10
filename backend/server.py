@@ -207,6 +207,8 @@ def make_handler(db_path: Path):
                     match = re.fullmatch(r"/api/occurrences/(\d+)", path)
                     if match and method == "GET":
                         return self.occurrence_detail(conn, int(match.group(1)))
+                    if match and method == "DELETE":
+                        return self.delete_occurrence(conn, user, int(match.group(1)))
                     match = re.fullmatch(r"/api/occurrences/(\d+)/transition", path)
                     if match and method == "POST":
                         return self.transition_occurrence(conn, user, int(match.group(1)))
@@ -346,6 +348,15 @@ def make_handler(db_path: Path):
                 "items": [public_occurrence(row) for row in rows],
                 "total": total, "page": page, "limit": limit,
             })
+
+        def delete_occurrence(self, conn: sqlite3.Connection, user: dict, occurrence_id: int) -> None:
+            self.require_role(user, "agente", "gestor")
+            # All dependent tables reference occurrences with ON DELETE CASCADE.
+            # The surrounding transaction commits before the response is sent.
+            cursor = conn.execute("DELETE FROM occurrences WHERE id=?", (occurrence_id,))
+            if cursor.rowcount != 1:
+                raise APIError(404, "Ocorrência não encontrada.")
+            self.send_json(200, {"ok": True, "deleted_id": occurrence_id})
 
         def occurrence_detail(self, conn: sqlite3.Connection, occurrence_id: int) -> None:
             occurrence = fetch_occurrence(conn, occurrence_id)
@@ -538,6 +549,12 @@ def make_handler(db_path: Path):
                 self.send_error(HTTPStatus.METHOD_NOT_ALLOWED)
             else:
                 super().do_HEAD()
+
+        def do_DELETE(self):
+            if urlparse(self.path).path.startswith("/api/"):
+                self.api("DELETE")
+            else:
+                self.send_error(HTTPStatus.METHOD_NOT_ALLOWED)
 
     return AlertaBairroHandler
 

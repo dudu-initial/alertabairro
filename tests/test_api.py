@@ -253,6 +253,51 @@ class APITests(unittest.TestCase):
         self.assertEqual(code, 200, body)
         self.assertEqual(body["occurrence"]["status"], "Descartado")
 
+    def test_delete_requires_agent_or_manager(self):
+        report = self.create_report()
+        path = f"/api/occurrences/{report['id']}"
+        self.assertEqual(self.request("DELETE", path)[0], 401)
+        self.assertEqual(self.request("DELETE", path, role="morador")[0], 403)
+        self.assertEqual(self.request("GET", path, role="morador")[0], 200)
+        for role in ("agente", "gestor"):
+            with self.subTest(role=role):
+                current = self.create_report()
+                target = f"/api/occurrences/{current['id']}"
+                code, result = self.request("DELETE", target, role=role)
+                self.assertEqual(code, 200, result)
+                self.assertEqual(result["deleted_id"], current["id"])
+                self.assertEqual(self.request("GET", target, role="morador")[0], 404)
+                self.assertEqual(self.request("DELETE", target, role=role)[0], 404)
+
+    def test_delete_cascades_related_records_and_updates_lists(self):
+        from tests.test_vision import ASSISTANCE
+        from backend.db import db_session
+        code, result = self.request("POST", "/api/occurrences", {**VALID_REPORT, "ai_assistance": ASSISTANCE}, "morador")
+        self.assertEqual(code, 201)
+        occurrence_id = result["occurrence"]["id"]
+        path = f"/api/occurrences/{occurrence_id}"
+        for state in ("Em validação", "Confirmado", "Alerta emitido"):
+            payload = {"to": state, "message": "Alerta de teste de exclusão com registros vinculados."}
+            self.assertIn(self.request("POST", path + "/transition", payload, "agente")[0], (200, 201))
+        other = self.create_report()
+        before = self.request("GET", "/api/dashboard", role="gestor")[1]["stats"]["total"]
+        with db_session(self.server.db_path) as conn:
+            for table in ("occurrence_history", "alerts", "notifications", "vision_assessments"):
+                self.assertGreater(conn.execute(f"SELECT COUNT(*) FROM {table} WHERE occurrence_id=?", (occurrence_id,)).fetchone()[0], 0)
+        self.assertEqual(self.request("DELETE", path, role="agente")[0], 200)
+        with db_session(self.server.db_path) as conn:
+            for table in ("occurrence_history", "alerts", "notifications", "vision_assessments"):
+                self.assertEqual(conn.execute(f"SELECT COUNT(*) FROM {table} WHERE occurrence_id=?", (occurrence_id,)).fetchone()[0], 0)
+            self.assertEqual(conn.execute("PRAGMA foreign_key_check").fetchall(), [])
+        self.assertEqual(self.request("GET", f"/api/occurrences/{other['id']}", role="morador")[0], 200)
+        after = self.request("GET", "/api/dashboard", role="gestor")[1]["stats"]["total"]
+        self.assertEqual(after, before - 1)
+        for endpoint in ("/api/alerts", "/api/notifications"):
+            items = self.request("GET", endpoint, role="morador")[1]["items"]
+            self.assertFalse(any(item["occurrence_id"] == occurrence_id for item in items))
+        items = self.request("GET", "/api/occurrences?limit=100", role="morador")[1]["items"]
+        self.assertFalse(any(item["id"] == occurrence_id for item in items))
+
 
 if __name__ == "__main__":
     unittest.main()
