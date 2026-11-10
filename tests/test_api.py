@@ -95,6 +95,20 @@ class APITests(unittest.TestCase):
         self.assertEqual(code, 200)
         self.assertEqual(body["user"]["role"], "morador")
 
+    def test_unknown_affected_people_persist_and_remain_distinct_from_zero(self):
+        for count in (None, 0, 7):
+            with self.subTest(count=count):
+                code, body = self.request("POST", "/api/occurrences", {**VALID_REPORT, "affected_people": count}, "morador")
+                self.assertEqual(code, 201, body)
+                report = body["occurrence"]
+                self.assertEqual(report["affected_people"], count)
+                detail = self.request("GET", f"/api/occurrences/{report['id']}", role="agente")[1]
+                self.assertEqual(detail["occurrence"]["affected_people"], count)
+                from backend.db import db_session
+                with db_session(self.server.db_path) as conn:
+                    stored = conn.execute("SELECT affected_people_unknown FROM occurrences WHERE id=?", (report["id"],)).fetchone()
+                    self.assertEqual(stored[0], int(count is None))
+
     def test_neighborhood_search_and_canonical_persistence(self):
         code, catalog = self.request("GET", "/api/neighborhoods?q=vila%20mariana")
         self.assertEqual(code, 200)

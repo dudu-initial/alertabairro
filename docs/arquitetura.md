@@ -101,3 +101,7 @@ Essas ideias descrevem caminhos de evolução; não são apresentadas como recur
 ## Assistência visual implementada
 
 `frontend/vision.js` controla câmera/foto; `vision-worker.mjs` executa CLIP q8 por Transformers.js/WASM no aparelho. O modelo é baixado de uma revisão fixa do Hugging Face, sob demanda. Pixels não passam pela API. Regras em `vision-rules.js` produzem uma sugestão ou abstenção; o tipo e uma descrição inicial são preenchidos automaticamente; o morador revisa ao tocar em Continuar, antes de salvar. `backend/vision.py` valida metadados informados pelo cliente e a tabela `vision_assessments` os associa à ocorrência. Não há aumento automático de confiança, confirmação de estado ou emissão de alertas. [Fluxo detalhado e limites](ia-camera.md).
+
+### Quantidade desconhecida de pessoas
+
+`affected_people: null` representa quantidade desconhecida na API. O banco mantém o campo legado não nulo e acrescenta `affected_people_unknown` com migração aditiva e idempotente. Quando a flag é 1, o valor numérico legado é apenas um preenchimento interno e a API sempre retorna `null`. Registros antigos preservam suas contagens. Quantidade desconhecida não acrescenta bônus populacional ao cálculo de risco; não equivale à confirmação de zero afetados.

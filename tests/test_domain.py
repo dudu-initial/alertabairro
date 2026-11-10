@@ -48,6 +48,13 @@ class OccurrenceValidationTests(unittest.TestCase):
         with self.assertRaises(ValidationError):
             validate_occurrence({**VALID_REPORT, "occurred_at": "2999-01-01T00:00:00Z"})
 
+    def test_unknown_people_are_distinct_from_zero(self):
+        unknown = validate_occurrence({**VALID_REPORT, "affected_people": None})
+        zero = validate_occurrence({**VALID_REPORT, "affected_people": 0})
+        self.assertIsNone(unknown["affected_people"])
+        self.assertEqual(zero["affected_people"], 0)
+        self.assertEqual(classify_risk("Alagamento", 3, None), (49, "Moderado"))
+
 
 class ClassificationTests(unittest.TestCase):
     def test_risk_rises_with_severity_and_people(self):

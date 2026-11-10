@@ -50,6 +50,7 @@ CREATE TABLE IF NOT EXISTS occurrences (
   longitude REAL,
   severity INTEGER NOT NULL,
   affected_people INTEGER NOT NULL,
+  affected_people_unknown INTEGER NOT NULL DEFAULT 0 CHECK (affected_people_unknown IN (0,1)),
   status TEXT NOT NULL,
   risk_score INTEGER NOT NULL,
   risk_level TEXT NOT NULL,
@@ -155,6 +156,9 @@ def init_database(db_path: str | Path) -> None:
     db_path.parent.mkdir(parents=True, exist_ok=True)
     with db_session(db_path) as conn:
         conn.executescript(SCHEMA)
+        columns = {row["name"] for row in conn.execute("PRAGMA table_info(occurrences)")}
+        if "affected_people_unknown" not in columns:
+            conn.execute("ALTER TABLE occurrences ADD COLUMN affected_people_unknown INTEGER NOT NULL DEFAULT 0 CHECK (affected_people_unknown IN (0,1))")
 
 
 def seed_database(db_path: str | Path, reset: bool = False) -> bool:

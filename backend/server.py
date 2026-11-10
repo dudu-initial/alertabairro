@@ -73,7 +73,10 @@ def public_occurrence(row: sqlite3.Row | dict) -> dict:
         "corroborations", "reporter_id", "reporter_name", "source_id",
         "source_label", "source_kind", "occurred_at", "created_at", "updated_at",
     )
-    return {key: row[key] for key in keys}
+    result = {key: row[key] for key in keys}
+    if row["affected_people_unknown"]:
+        result["affected_people"] = None
+    return result
 
 
 def fetch_occurrence(conn: sqlite3.Connection, occurrence_id: int) -> dict | None:
@@ -382,13 +385,14 @@ def make_handler(db_path: Path):
             cursor = conn.execute(
                 """INSERT INTO occurrences
                    (title,type,description,neighborhood,address,latitude,longitude,severity,
-                    affected_people,status,risk_score,risk_level,confidence_score,
+                    affected_people,affected_people_unknown,status,risk_score,risk_level,confidence_score,
                     reporter_id,source_id,occurred_at,created_at,updated_at)
-                   VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)""",
+                   VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)""",
                 (
                     fields["title"], fields["type"], fields["description"],
                     fields["neighborhood"], fields["address"], fields["latitude"],
-                    fields["longitude"], fields["severity"], fields["affected_people"],
+                    fields["longitude"], fields["severity"], fields["affected_people"] if fields["affected_people"] is not None else 0,
+                    int(fields["affected_people"] is None),
                     "Registrado", risk_score, risk_level, confidence, user["id"], 1,
                     fields["occurred_at"] or now, now, now,
                 ),

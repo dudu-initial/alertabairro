@@ -96,14 +96,15 @@ def validate_occurrence(payload: dict[str, Any]) -> dict[str, Any]:
         raise ValidationError("A gravidade deve ser um número de 1 a 5.") from None
     if isinstance(severity_input, bool) or severity not in range(1, 6):
         raise ValidationError("A gravidade deve ser um número de 1 a 5.")
-    affected_input = payload.get("affected_people", 0)
+    affected_input = payload.get("affected_people")
+    unknown_people = affected_input is None
     try:
         if isinstance(affected_input, float) and not affected_input.is_integer():
             raise ValueError
-        affected_people = int(affected_input)
+        affected_people = None if unknown_people else int(affected_input)
     except (ValueError, TypeError):
         raise ValidationError("O número de pessoas afetadas deve ser inteiro.") from None
-    if isinstance(affected_input, bool) or not 0 <= affected_people <= 100000:
+    if not unknown_people and (isinstance(affected_input, bool) or not 0 <= affected_people <= 100000):
         raise ValidationError("O número de pessoas afetadas deve estar entre 0 e 100000.")
     coords = {}
     for key, limit in (("latitude", 90), ("longitude", 180)):
@@ -151,9 +152,9 @@ def validate_occurrence(payload: dict[str, Any]) -> dict[str, Any]:
     }
 
 
-def classify_risk(occurrence_type: str, severity: int, affected_people: int) -> tuple[int, str]:
+def classify_risk(occurrence_type: str, severity: int, affected_people: int | None) -> tuple[int, str]:
     """Classify a report using a transparent, bounded score (0–100)."""
-    if occurrence_type not in TYPES or not 1 <= severity <= 5 or affected_people < 0:
+    if occurrence_type not in TYPES or not 1 <= severity <= 5 or (affected_people is not None and affected_people < 0):
         raise ValidationError("Parâmetros de risco inválidos.")
     base = {
         "Alagamento": 25,
@@ -163,7 +164,9 @@ def classify_risk(occurrence_type: str, severity: int, affected_people: int) -> 
         "Falta de energia": 15,
         "Outro": 10,
     }[occurrence_type]
-    score = min(100, base + severity * 8 + min(20, affected_people * 2))
+    # Unknown population adds no population bonus; it is not a claim of zero affected people.
+    population_bonus = 0 if affected_people is None else min(20, affected_people * 2)
+    score = min(100, base + severity * 8 + population_bonus)
     if score <= 34:
         level = "Baixo"
     elif score <= 59:

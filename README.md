@@ -136,7 +136,7 @@ node --test tests/*.test.cjs
 
 Os testes cobrem validação do registro, pontuações, máquina de estados, permissões, notificações e rotas principais. A integração HTTP usa banco temporário e não altera o arquivo demonstrativo em `data/`.
 
-**Verificação do back-end:** o comando acima foi executado no Windows e os **30 testes Python e 15 testes Node passaram**, incluindo requisições HTTP locais à API e revogação da sessão após logout. Também foram verificadas a inicialização do banco e a carga demonstrativa. A interface reformulada requer revisão visual separada.
+**Verificação do back-end:** o comando acima foi executado no Windows e os **33 testes Python e 15 testes Node passaram**, incluindo requisições HTTP locais à API e revogação da sessão após logout. Também foram verificadas a inicialização do banco e a carga demonstrativa. A interface reformulada requer revisão visual separada.
 
 ## Diagramas e vídeo
 
@@ -192,3 +192,5 @@ npm run test:vision
 ```
 
 Os arquivos grandes baixados pelo teste ficam em `.cache/`, ignorada pelo Git. `npm ci` não é necessário para rodar a API Python ou abrir a aplicação. [Funcionamento, arquitetura, fontes, testes e limites da IA](docs/ia-camera.md).
+
+Na etapa de urgência, Baixa usa verde, Média amarelo e Alta vermelho, com texto e marca de seleção. Pessoas afetadas permite **Não sei** (padrão) ou **Informar quantidade**. A API aceita `affected_people: null` para desconhecido e mantém `0` como uma estimativa explícita de nenhuma pessoa. No detalhe, desconhecido aparece como **Não informado**.
