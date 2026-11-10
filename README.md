@@ -169,3 +169,7 @@ Somente os arquivos públicos da interface são armazenados no cache. Login, reg
 ## Cadastro de moradores
 
 Na tela de login, escolha **Criar minha conta**. Informe nome, e-mail e uma senha de 8 a 128 caracteres e confirme a senha. Após o cadastro, entre com suas credenciais. `POST /api/auth/register` persiste o usuário com senha PBKDF2; e-mails duplicados são rejeitados. O cadastro público cria somente moradores. Não há confirmação de e-mail nem recuperação de senha nesta versão.
+
+## Identidade visual e acessibilidade
+
+A revisão visual usa sinalização azul/amarela, texto maior, títulos de ocorrências sem corte e navegação inferior em celulares e tablets. Confira as decisões e os limites de verificação em [Design para celular](docs/design-mobile.md).
