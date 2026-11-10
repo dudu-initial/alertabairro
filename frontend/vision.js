@@ -4,7 +4,8 @@
   let active=null;
   const esc=value=>String(value??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
   function panel(report) {
-    return `<section class="vision-panel" aria-labelledby="vision-heading"><div class="vision-heading"><span class="vision-symbol" aria-hidden="true">◎</span><div><h3 id="vision-heading">Mostre o que aconteceu</h3><p>A câmera pode ajudar a preencher seu relato.</p></div><span class="vision-label">IA experimental</span></div><p class="vision-intro">Aponte para o local e veja uma sugestão. Confirme apenas o que você observou.</p><div class="vision-actions"><button type="button" class="btn btn-primary" id="vision-start">Abrir câmera com IA</button><label class="btn btn-secondary vision-upload" for="vision-file">Tirar ou escolher foto<input id="vision-file" type="file" accept="image/jpeg,image/png,image/webp" capture="environment"></label></div><p class="explain">A primeira análise baixa cerca de 180 MB. Prefira Wi-Fi. A imagem é analisada no aparelho e não é enviada ao servidor.</p><div id="vision-stage" class="vision-stage" hidden><video id="vision-video" autoplay muted playsinline aria-label="Prévia da câmera traseira"></video><canvas id="vision-canvas" hidden aria-label="Foto selecionada para análise"></canvas><span class="vision-frame" aria-hidden="true"></span><span class="vision-stage-label">Mantenha distância do perigo</span></div><div class="vision-controls"><button type="button" class="btn btn-secondary" id="vision-stop" hidden>Parar câmera e análise</button><button type="button" class="btn btn-quiet" id="vision-clear" hidden>Remover imagem</button></div><p id="vision-status" class="vision-status" role="status">Você também pode preencher o formulário abaixo, sem usar a câmera.</p><progress id="vision-progress" max="100" hidden aria-label="Carregamento da inteligência artificial"></progress><div id="vision-result" class="vision-result" hidden><h4 id="vision-result-title"></h4><p id="vision-result-detail"></p><button type="button" class="btn btn-primary" id="vision-accept" hidden>Usar sugestão no relato</button></div><p id="vision-applied" class="vision-applied" ${report.ai_assistance?'':'hidden'}>${report.ai_assistance?`Sugestão de ${esc(report.ai_assistance.suggested_type)} confirmada por você. Revise o relato abaixo.`:''}</p><details class="details"><summary>O que a IA consegue sugerir?</summary><p>Ela compara a cena com exemplos de alagamento, fogo, deslizamento e árvore caída. Pode errar ou não identificar. Não detecta falta de energia nem avalia se um local é seguro.</p><p>A sugestão não confirma a ocorrência e não emite alertas. Um agente continua responsável pela validação.</p></details></section>`;
+    const detected=report.vision_pending||report.ai_assistance;
+    return `<section class="vision-panel" aria-labelledby="vision-heading"><div class="vision-heading"><span class="vision-symbol" aria-hidden="true">◎</span><div><h3 id="vision-heading">Mostre o que aconteceu</h3><p>Aponte a câmera. A IA identifica e preenche o tipo.</p></div><span class="vision-label">IA experimental</span></div><p class="vision-intro">Fogo em uma casa → Incêndio. Água cobrindo a rua → Alagamento. A classificação aparece automaticamente; revise antes de enviar.</p><div class="vision-actions"><button type="button" class="btn btn-primary" id="vision-start">Abrir câmera com IA</button><label class="btn btn-secondary vision-upload" for="vision-file">Tirar ou escolher foto<input id="vision-file" type="file" accept="image/jpeg,image/png,image/webp" capture="environment"></label></div><p class="explain">A primeira análise baixa cerca de 180 MB. Prefira Wi-Fi. A imagem é analisada no aparelho e não é enviada ao servidor.</p><div id="vision-stage" class="vision-stage" hidden><video id="vision-video" autoplay muted playsinline aria-label="Prévia da câmera traseira"></video><canvas id="vision-canvas" hidden aria-label="Foto selecionada para análise"></canvas><span class="vision-frame" aria-hidden="true"></span><span class="vision-stage-label">Mantenha distância do perigo</span></div><div class="vision-controls"><button type="button" class="btn btn-secondary" id="vision-stop" hidden>Parar câmera e análise</button><button type="button" class="btn btn-quiet" id="vision-clear" hidden>Remover imagem</button></div><p id="vision-status" class="vision-status" role="status">A detecção preenche o tipo e uma descrição inicial. Você também pode preencher manualmente.</p><progress id="vision-progress" max="100" hidden aria-label="Carregamento da inteligência artificial"></progress><div id="vision-result" class="vision-result" hidden><h4 id="vision-result-title"></h4><p id="vision-result-detail"></p><button type="button" class="btn btn-primary" id="vision-accept" hidden>Aplicar este resultado</button></div><p id="vision-applied" class="vision-applied" ${detected?'':'hidden'}>${detected?`Tipo identificado: ${esc(detected.suggested_type)}. Revise o relato antes de continuar.`:''}</p><details class="details"><summary>O que a IA identifica?</summary><p>Ela compara a cena com exemplos de alagamento, fogo, deslizamento e árvore caída. Pode errar ou não identificar. Não detecta falta de energia nem avalia se um local é seguro.</p><p>A sugestão não confirma a ocorrência e não emite alertas. Um agente continua responsável pela validação.</p></details></section>`;
   }
   function destroy(){active?.dispose();active=null;}
   function mount(report) {
@@ -15,6 +16,7 @@
     const result=byId('vision-result'),accept=byId('vision-accept');
     let stream=null,worker=null,timer=null,disposed=false,epoch=0,seq=0,ready=false,proposed=null,previousType=null,repeats=0;
     const pending=new Map();
+    let manualType=!!byId('report-type').value&&!report.vision_pending;
     function controls(working){start.disabled=working;file.disabled=working;stopButton.hidden=!working;clear.hidden=!working&&byId('vision-stage').hidden;}
     function stop(message='Análise pausada. Você pode abrir a câmera novamente ou continuar pelo formulário.') {
       epoch++;clearTimeout(timer);stream?.getTracks().forEach(track=>track.stop());stream=null;video.srcObject=null;
@@ -37,7 +39,7 @@
       if(ready)return;
       if(!globalThis.Worker)throw new Error('Este navegador não oferece análise local. Continue pelo formulário.');
       status.textContent='Preparando a IA no aparelho. O primeiro carregamento pode levar alguns minutos…';progress.hidden=false;progress.removeAttribute('value');
-      worker=new Worker('/vision-worker.mjs',{type:'module'});
+      worker=new Worker('/vision-worker.mjs?v=vision-6',{type:'module'});
       worker.onmessage=({data})=>{
         const job=pending.get(data.id);if(!job)return;
         if(data.type==='progress'){progress.value=data.progress;status.textContent=`Baixando arquivo da IA: ${data.progress}%. A foto permanece no aparelho.`;return;}
@@ -66,9 +68,11 @@
       }
       repeats=previousType===decision.suggested_type?repeats+1:1;previousType=decision.suggested_type;
       if(live&&repeats<2){proposed=null;accept.hidden=true;byId('vision-result-title').textContent='Analisando mais um instante…';byId('vision-result-detail').textContent='Mantenha o enquadramento para comparar duas imagens.';return;}
-      proposed=decision;accept.hidden=false;
-      byId('vision-result-title').textContent=`Possível ${decision.suggested_type.toLocaleLowerCase('pt-BR')}`;
-      byId('vision-result-detail').textContent=`Compatibilidade visual: ${Math.round(decision.score*100)}%. É uma comparação entre cenas, não uma probabilidade de que o evento aconteceu. Confira antes de usar.`;
+      proposed=decision;
+      byId('vision-result-title').textContent=`Classificação da IA: ${decision.suggested_type}`;
+      byId('vision-result-detail').textContent=`Compatibilidade visual: ${Math.round(decision.score*100)}%. A classificação é automática e pode errar. Revise o relato antes de continuar.`;
+      if(!manualType)fillResult(decision);
+      else {accept.hidden=false;status.textContent='A IA identificou uma categoria. Mantivemos o tipo que você escolheu; aplique o resultado se desejar.';}
     }
     async function analyze(source,width,height,live,current){
       const image=capture(source,width,height);
@@ -76,7 +80,7 @@
       status.textContent='Analisando a imagem no aparelho…';
       const data=await send('analyze',image);
       if(disposed||current!==epoch)return;
-      show(data.predictions,live);status.textContent=live?'Câmera ativa. A sugestão é atualizada a cada análise.':'Análise concluída. Confirme a sugestão ou preencha manualmente.';
+      show(data.predictions,live);if(current===epoch)status.textContent=live?'Câmera ativa. A classificação é atualizada a cada análise.':'Análise concluída. Revise o resultado e o formulário.';
     }
     function failure(error,current){if(disposed||current!==epoch||error.message==='cancelled')return;stop(error.message);}
     start.onclick=async()=>{
@@ -116,18 +120,25 @@
       }catch(error){failure(error,current);}finally{if(objectUrl)URL.revokeObjectURL(objectUrl);file.value='';}
     };
     stopButton.onclick=()=>stop();clear.onclick=()=>reset();
-    accept.onclick=()=>{
-      if(!proposed)return;
-      const chosen=proposed;stop('Sugestão aplicada. Revise o tipo e a descrição antes de continuar.');
+    function fillResult(chosen){
+      stop(`IA identificou: ${chosen.suggested_type}. O tipo foi preenchido automaticamente. Revise o relato e toque em Continuar.`);
       const type=byId('report-type'),description=byId('report-description');
       type.value=chosen.suggested_type;report.type=chosen.suggested_type;
-      report.ai_assistance=AlertaVisionRules.assessment(chosen);
-      if(!description.value.trim())description.value=`Possível ${chosen.suggested_type.toLocaleLowerCase('pt-BR')} observado no local. Relato iniciado com auxílio de análise de imagem; precisa de validação.`;
+      delete report.ai_assistance;
+      report.vision_pending=chosen;
+      if(!description.value.trim()||description.value===report.vision_auto_description){
+        description.value=AlertaVisionRules.draft(chosen);report.vision_auto_description=description.value;
+      }
       report.description=description.value;
-      const applied=byId('vision-applied');applied.hidden=false;applied.textContent=`Sugestão de ${chosen.suggested_type} confirmada por você. Revise o relato abaixo.`;
-      accept.hidden=true;proposed=null;type.focus();
+      const applied=byId('vision-applied');applied.hidden=false;applied.textContent=`Tipo identificado: ${chosen.suggested_type}. Revise o preenchimento automático antes de tocar em Continuar.`;
+      video.hidden=true;canvas.hidden=false;
+      accept.hidden=true;proposed=null;
+    }
+    accept.onclick=()=>{
+      if(!proposed)return;
+      manualType=false;fillResult(proposed);byId('report-type').focus();
     };
-    byId('report-type').addEventListener('change',()=>{delete report.ai_assistance;byId('vision-applied').hidden=true;});
+    byId('report-type').addEventListener('change',()=>{manualType=!!byId('report-type').value;delete report.ai_assistance;delete report.vision_pending;byId('vision-applied').hidden=true;});
     active={stop,dispose(){disposed=true;stop();canvas.width=1;canvas.height=1;}};
   }
   document.addEventListener('visibilitychange',()=>{if(document.hidden)active?.stop('Análise pausada ao sair da tela. Toque em Abrir câmera para retomar.');});
@@ -136,5 +147,9 @@
     if(!value)return '';
     return `<section class="card"><h2>Relato com auxílio de IA</h2><p>O morador confirmou a sugestão <strong>${esc(value.suggested_type)}</strong>.</p><p>Compatibilidade visual informada pelo aparelho: <strong>${Math.round(Number(value.score)*100)}%</strong>.</p><p class="explain">Modelo CLIP, análise experimental. Essa pontuação não foi verificada pelo servidor e não aumenta a confiança da ocorrência. A imagem não foi armazenada.</p></section>`;
   }
-  globalThis.AlertaVision={panel,mount,destroy,detail};
+  function review(report,type){
+    if(report.vision_pending?.suggested_type===type)report.ai_assistance=AlertaVisionRules.assessment(report.vision_pending);
+    delete report.vision_pending;
+  }
+  globalThis.AlertaVision={panel,mount,destroy,detail,review};
 })();

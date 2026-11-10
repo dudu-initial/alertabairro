@@ -117,6 +117,6 @@ O fluxo de avaliação recomendado começa em **Início** no celular: filtrar o 
 ## Complemento: assistência por imagem
 
 - RF18: abrir câmera traseira ou selecionar foto e analisar cenas com IA local, com sugestão ou resposta inconclusiva.
-- RF19: exigir confirmação para preencher o tipo e a descrição inicial; permitir revisão manual; não emitir alerta automaticamente.
+- RF19: preencher automaticamente o tipo e uma descrição inicial após classificação visual conclusiva; preservar edições manuais; considerar revisão apenas ao tocar em Continuar; não emitir alerta automaticamente.
 - RF20: registrar metadados da sugestão no detalhe da ocorrência, separados da confiança, sem armazenar imagem.
 - RNF: encerrar câmera ao sair da tela, manter cadastro manual em falhas, exibir tamanho do primeiro download e limitar entradas/tempo de análise. [Critérios e testes](ia-camera.md).

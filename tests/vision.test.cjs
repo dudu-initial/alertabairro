@@ -1,7 +1,7 @@
 const test=require('node:test');
 const assert=require('node:assert/strict');
 const rules=require('../frontend/vision-rules.js');
-const scores=(winner=0,score=.9,runner=.05)=>rules.CANDIDATES.map(([label],i)=>({label,score:i===winner?score:i===(winner+1)%9?runner:(1-score-runner)/7}));
+const scores=(winner=0,score=.9,runner=.05)=>rules.CANDIDATES.map(([label],i)=>({label,score:i===winner?score:i===(winner+1)%rules.CANDIDATES.length?runner:(1-score-runner)/(rules.CANDIDATES.length-2)}));
 
 test('Strong supported scene produces a suggestion, never an alert',()=>{
   const result=rules.decide(scores());
@@ -21,4 +21,12 @@ test('Sorting does not mutate model output and missing classes cannot force a ha
   const input=scores(2).reverse(),copy=JSON.stringify(input);
   assert.equal(rules.decide(input).suggested_type,'Deslizamento');assert.equal(JSON.stringify(input),copy);
   assert.equal(rules.decide(input.slice(0,4)).suggested_type,null);
+});
+test('Controlled flames and orange lights abstain; building fire gets an editable draft',()=>{
+  assert.equal(rules.decide(scores(9)).suggested_type,null);
+  assert.equal(rules.decide(scores(10)).suggested_type,null);
+  const result=rules.decide(scores(1));
+  assert.equal(result.suggested_type,'Incêndio');
+  assert.match(rules.draft(result),/incêndio/);
+  assert.equal(rules.draft(null),'');
 });

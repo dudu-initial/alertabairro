@@ -237,6 +237,7 @@
   }
   function captureReport(form) { const selected=form.querySelector('#report-type');if(selected&&S.report.ai_assistance?.suggested_type!==selected.value)delete S.report.ai_assistance; for(const [key,value] of new FormData(form).entries())S.report[key]=String(value); }
   async function submitReport(form) {
+    if(S.reportStep===1)AlertaVision.review(S.report,form.querySelector('#report-type').value);
     if(S.reportStep===2){
       const input=form.querySelector('#report-neighborhood');
       const place=AlertaGeo.lookup(S.places||[],input.value);

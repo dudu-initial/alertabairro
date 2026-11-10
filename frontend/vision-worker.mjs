@@ -1,5 +1,5 @@
 import {pipeline,env,RawImage} from './vendor/transformers/transformers.min.js';
-import './vision-rules.js';
+import './vision-rules.js?v=vision-6';
 
 const {MODEL,REVISION,CANDIDATES}=globalThis.AlertaVisionRules;
 env.allowLocalModels=false;

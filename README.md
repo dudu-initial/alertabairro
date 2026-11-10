@@ -136,7 +136,7 @@ node --test tests/*.test.cjs
 
 Os testes cobrem validação do registro, pontuações, máquina de estados, permissões, notificações e rotas principais. A integração HTTP usa banco temporário e não altera o arquivo demonstrativo em `data/`.
 
-**Verificação do back-end:** o comando acima foi executado no Windows e os **30 testes Python e 13 testes Node passaram**, incluindo requisições HTTP locais à API e revogação da sessão após logout. Também foram verificadas a inicialização do banco e a carga demonstrativa. A interface reformulada requer revisão visual separada.
+**Verificação do back-end:** o comando acima foi executado no Windows e os **30 testes Python e 15 testes Node passaram**, incluindo requisições HTTP locais à API e revogação da sessão após logout. Também foram verificadas a inicialização do banco e a carga demonstrativa. A interface reformulada requer revisão visual separada.
 
 ## Diagramas e vídeo
 
@@ -180,11 +180,11 @@ A revisão visual usa sinalização azul/amarela, texto maior, títulos de ocorr
 
 ## Câmera com inteligência artificial
 
-Na primeira etapa de **Registrar**, use **Abrir câmera com IA** ou **Tirar ou escolher foto**. A câmera analisa a cena automaticamente; ao obter uma sugestão, toque em **Usar sugestão no relato**, confira o texto e continue. A foto é analisada no aparelho. Apenas metadados da sugestão confirmada são salvos com o relato, sem imagem.
+Na primeira etapa de **Registrar**, use **Abrir câmera com IA** ou **Tirar ou escolher foto**. A câmera analisa a cena e preenche automaticamente o tipo e uma descrição inicial ao identificar uma categoria. Exemplo: uma casa em chamas é classificada como **Incêndio**. Confira o texto e toque em **Continuar**; a detecção não exige escolher a categoria. Escolhas e descrições manuais já preenchidas são preservadas. A foto é analisada no aparelho. Apenas metadados da sugestão confirmada são salvos com o relato, sem imagem.
 
 A implementação usa **CLIP q8 + Transformers.js em um Web Worker**, com sugestões experimentais de alagamento, incêndio, deslizamento e árvore caída. Não usa YOLO nesta versão. Não publica alertas automaticamente e pode responder que não conseguiu identificar. São necessários cerca de **180 MB no primeiro uso**; prefira Wi-Fi. Câmera ao vivo requer **HTTPS ou localhost**; em HTTP pelo IP do computador, use foto ou formulário manual.
 
-O modelo real foi executado em Node/CPU com duas fotos: sugeriu alagamento para uma rua inundada e não sugeriu ocorrência para um animal. Isso não mede precisão e não valida câmera/WASM no celular. Para reproduzir a inferência (Node 20+):
+O modelo real foi executado em Node/CPU com quatro fotos: identificou incêndio em uma casa e alagamento em uma rua; não classificou uma chama de fogão nem um animal como ocorrência. A comparação com fogo controlado foi acrescentada após detectar um falso positivo no teste de fogão. Isso não mede precisão e não valida câmera/WASM no celular. Para reproduzir a inferência (Node 20+):
 
 ```powershell
 npm ci
