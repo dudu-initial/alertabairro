@@ -9,3 +9,5 @@ tests/tmp*/
 coverage/
 .DS_Store
 Thumbs.db
+node_modules/
+.cache/

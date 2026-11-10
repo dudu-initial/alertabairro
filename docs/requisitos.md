@@ -113,3 +113,10 @@ O fluxo de avaliação recomendado começa em **Início** no celular: filtrar o 
 - RF16: exibir mapa de ruas com marcadores identificados por risco, estado, origem e confiança; filtrar bairro, risco e alertas ativos.
 - RF17: permitir marcar opcionalmente o local de uma ocorrência e persistir latitude/longitude juntas; não criar pontos para relatos sem coordenadas.
 - RNF: manter atribuição IBGE/OSM, alternativa em lista e operação do catálogo sem chamadas externas. Cobertura e verificações em [mapa e bairros](mapa-e-bairros.md).
+
+## Complemento: assistência por imagem
+
+- RF18: abrir câmera traseira ou selecionar foto e analisar cenas com IA local, com sugestão ou resposta inconclusiva.
+- RF19: exigir confirmação para preencher o tipo e a descrição inicial; permitir revisão manual; não emitir alerta automaticamente.
+- RF20: registrar metadados da sugestão no detalhe da ocorrência, separados da confiança, sem armazenar imagem.
+- RNF: encerrar câmera ao sair da tela, manter cadastro manual em falhas, exibir tamanho do primeiro download e limitar entradas/tempo de análise. [Critérios e testes](ia-camera.md).

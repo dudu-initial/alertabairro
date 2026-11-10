@@ -97,3 +97,7 @@ Essas ideias descrevem caminhos de evolução; não são apresentadas como recur
 ## Localização e mapa implementados
 
 `backend/places.py` normaliza nomes na criação e na inicialização de registros existentes. O endpoint público `/api/neighborhoods` consulta snapshots geográficos locais. `frontend/geo.js` apresenta mapa Leaflet com tiles do OpenStreetMap, filtros de risco, lista acessível e seleção opcional de coordenadas. A API exige pares de coordenadas válidas e o SQLite as persiste. Centros de bairros só orientam a navegação. Consulte [fontes, atribuição e limitações](mapa-e-bairros.md).
+
+## Assistência visual implementada
+
+`frontend/vision.js` controla câmera/foto; `vision-worker.mjs` executa CLIP q8 por Transformers.js/WASM no aparelho. O modelo é baixado de uma revisão fixa do Hugging Face, sob demanda. Pixels não passam pela API. Regras em `vision-rules.js` produzem uma sugestão ou abstenção; o morador confirma antes de preencher o relato. `backend/vision.py` valida metadados informados pelo cliente e a tabela `vision_assessments` os associa à ocorrência. Não há aumento automático de confiança, confirmação de estado ou emissão de alertas. [Fluxo detalhado e limites](ia-camera.md).

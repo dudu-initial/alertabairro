@@ -130,6 +130,32 @@ class APITests(unittest.TestCase):
                 self.assertIn(content_type, response.headers["Content-Type"])
                 self.assertGreater(len(response.read()), 100)
 
+    def test_ai_assistance_is_saved_without_verification_or_notifications(self):
+        from tests.test_vision import ASSISTANCE
+        manual = self.create_report()
+        before = self.request("GET", "/api/notifications", role="morador")[1]["unread"]
+        code, created = self.request("POST", "/api/occurrences", {**VALID_REPORT, "ai_assistance": ASSISTANCE}, "morador")
+        self.assertEqual(code, 201, created)
+        report = created["occurrence"]
+        self.assertEqual(report["status"], "Registrado")
+        self.assertEqual(report["confidence_score"], manual["confidence_score"])
+        self.assertEqual(report["evidence_count"], 0)
+        detail = self.request("GET", f"/api/occurrences/{report['id']}", role="agente")[1]
+        self.assertEqual(detail["ai_assistance"]["suggested_type"], "Alagamento")
+        self.assertEqual(detail["ai_assistance"]["score"], .9)
+        self.assertIsNone(detail["alert"])
+        self.assertNotIn("image", detail["ai_assistance"])
+        self.assertEqual(self.request("GET", "/api/notifications", role="morador")[1]["unread"], before)
+        invalid = {**VALID_REPORT, "ai_assistance": {**ASSISTANCE, "human_confirmed": False}}
+        self.assertEqual(self.request("POST", "/api/occurrences", invalid, "morador")[0], 400)
+
+    def test_vision_runtime_assets_and_module_mime(self):
+        for path, mime in (("/vision-worker.mjs", "javascript"), ("/vision.js", "javascript"), ("/vendor/transformers/ort-wasm-simd-threaded.jsep.mjs", "javascript"), ("/vendor/transformers/ort-wasm-simd-threaded.jsep.wasm", "application/wasm")):
+            request = Request(self.base + path, method="HEAD")
+            with self.subTest(path=path), urlopen(request, timeout=5) as response:
+                self.assertEqual(response.status, 200)
+                self.assertIn(mime, response.headers["Content-Type"])
+
     def test_logout_revokes_server_session(self):
         code, body = self.request(
             "POST", "/api/auth/login",

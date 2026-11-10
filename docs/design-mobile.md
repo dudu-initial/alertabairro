@@ -7,3 +7,5 @@ A navegação inferior permanece em celulares e tablets até 999 px. Controles p
 Verificação: sintaxe JavaScript e testes HTTP; revisão estática de estilos e cálculo de contraste das cores principais. Não equivale a certificação WCAG. A revisão visual e os testes com leitor de tela/aparelho real continuam pendentes: a autorização anterior do navegador para localhost foi negada.
 
 O mapa mantém a identidade azul e acrescenta marcadores com letras B/M/A/C e cores de risco, além do símbolo ! para alerta ativo. A lista é uma alternativa ao mapa, com os mesmos filtros. A barra inferior tem cinco atalhos, incluindo Mapa. O cadastro oferece sugestões de bairros por teclado e seleção de ponto por toque, setas/centro ou coordenadas.
+
+A câmera fica dentro da primeira etapa do cadastro, com alternativa de foto e formulário manual. A moldura de enquadramento amarela é visual; não representa caixas de detecção. Status de download/análise usam anúncio acessível, controles de parar/remover e confirmação explícita da sugestão.

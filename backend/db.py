@@ -94,6 +94,16 @@ CREATE TABLE IF NOT EXISTS notifications (
   created_at TEXT NOT NULL
 );
 CREATE INDEX IF NOT EXISTS idx_notifications_user ON notifications(user_id, is_read, created_at DESC);
+CREATE TABLE IF NOT EXISTS vision_assessments (
+  occurrence_id INTEGER PRIMARY KEY REFERENCES occurrences(id) ON DELETE CASCADE,
+  model TEXT NOT NULL,
+  revision TEXT NOT NULL,
+  suggested_type TEXT NOT NULL,
+  score REAL NOT NULL,
+  margin REAL NOT NULL,
+  human_confirmed INTEGER NOT NULL CHECK (human_confirmed = 1),
+  created_at TEXT NOT NULL
+);
 """
 
 

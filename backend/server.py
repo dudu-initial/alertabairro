@@ -19,6 +19,7 @@ from urllib.parse import parse_qs, urlparse
 
 from .db import db_session, default_db_path, seed_database, utc_now, verify_password, make_password
 from .places import search_places, normalize_existing
+from .vision import validate_assistance
 from .domain import (
     RISKS, STATUSES, TRANSITIONS, TRANSITION_EVENTS, TYPES,
     ValidationError, calculate_confidence, can_transition, classify_risk,
@@ -362,10 +363,17 @@ def make_handler(db_path: Path):
                 "occurrence": occurrence,
                 "history": history,
                 "alert": dict(alert_row) if alert_row else None,
+                "ai_assistance": self.vision_assistance(conn, occurrence_id),
             })
 
+        def vision_assistance(self, conn, occurrence_id):
+            row = conn.execute("SELECT model,revision,suggested_type,score,margin,human_confirmed,created_at FROM vision_assessments WHERE occurrence_id=?", (occurrence_id,)).fetchone()
+            return dict(row) if row else None
+
         def create_occurrence(self, conn: sqlite3.Connection, user: dict) -> None:
-            fields = validate_occurrence(self.read_json())
+            body = self.read_json()
+            fields = validate_occurrence(body)
+            assistance = validate_assistance(body.get("ai_assistance"), fields["type"])
             risk_score, risk_level = classify_risk(
                 fields["type"], fields["severity"], fields["affected_people"]
             )
@@ -386,6 +394,10 @@ def make_handler(db_path: Path):
                 ),
             )
             occurrence_id = cursor.lastrowid
+            if assistance:
+                conn.execute("INSERT INTO vision_assessments(occurrence_id,model,revision,suggested_type,score,margin,human_confirmed,created_at) VALUES (?,?,?,?,?,?,?,?)", (
+                    occurrence_id, assistance["model"], assistance["revision"], assistance["suggested_type"], assistance["score"], assistance["margin"], 1, now,
+                ))
             conn.execute(
                 """INSERT INTO occurrence_history
                    (occurrence_id,from_status,to_status,event,actor_id,created_at)

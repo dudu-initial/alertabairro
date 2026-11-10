@@ -1,0 +1,13 @@
+{
+  "name": "alertabairro",
+  "version": "1.1.0",
+  "private": true,
+  "description": "Testes e preparação da IA local do AlertaBairro",
+  "scripts": {
+    "test": "node --test tests/*.test.cjs",
+    "test:vision": "node scripts/check-vision.mjs"
+  },
+  "devDependencies": {
+    "@huggingface/transformers": "3.8.1"
+  }
+}
