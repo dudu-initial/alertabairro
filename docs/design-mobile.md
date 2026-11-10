@@ -9,3 +9,5 @@ Verificação: sintaxe JavaScript e testes HTTP; revisão estática de estilos e
 O mapa mantém a identidade azul e acrescenta marcadores com letras B/M/A/C e cores de risco, além do símbolo ! para alerta ativo. A lista é uma alternativa ao mapa, com os mesmos filtros. A barra inferior tem cinco atalhos, incluindo Mapa. O cadastro oferece sugestões de bairros por teclado e seleção de ponto por toque, setas/centro ou coordenadas.
 
 A câmera fica dentro da primeira etapa do cadastro, com alternativa de foto e formulário manual. A moldura de enquadramento amarela é visual; não representa caixas de detecção. Status de download/análise usam anúncio acessível, controles de parar/remover e tipo preenchido automaticamente e revisão antes de Continuar.
+
+O ícone de marca usa uma casa amarela com exclamação azul integrada, sobre base azul de cantos arredondados. O desenho vetorial editável está em `frontend/assets/favicon.svg`; `node scripts/build-icons.cjs` (após `npm ci`) gera os PNGs 180/192/512 e a versão maskable com fundo opaco e margem segura. A mesma marca aparece no cabeçalho, login, cadastro, favicon e manifesto PWA.

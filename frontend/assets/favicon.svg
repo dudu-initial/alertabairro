@@ -1,1 +1,7 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64"><rect width="64" height="64" rx="14" fill="#1947B8"/><rect x="13" y="13" width="38" height="38" rx="7" fill="#FFD34E"/><path d="M20 33h7l4-12 6 22 4-11h5" fill="none" stroke="#17263C" stroke-width="3" stroke-linejoin="round"/></svg>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" fill="none">
+  <title>AlertaBairro — cuidado perto de casa</title>
+  <rect width="512" height="512" rx="112" fill="#1947B8"/>
+  <path d="M239 112a26 26 0 0 1 34 0l119 104c14 12 6 35-13 35h-13v106a35 35 0 0 1-35 35H181a35 35 0 0 1-35-35V251h-13c-19 0-27-23-13-35z" fill="#FFD34E"/>
+  <rect x="239" y="211" width="34" height="84" rx="17" fill="#1947B8"/>
+  <circle cx="256" cy="331" r="18" fill="#1947B8"/>
+</svg>

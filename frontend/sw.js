@@ -1,5 +1,5 @@
-const CACHE = 'alertabairro-shell-v7';
-const SHELL = ['/', '/vision-rules.js?v=vision-6', '/vision.js?v=vision-6', '/vision-worker.mjs?v=vision-6', '/geo.js?v=vision-6', '/vendor/leaflet/leaflet.js', '/vendor/leaflet/leaflet.css', '/app.js?v=report-7', '/styles.css?v=report-7', '/install.js', '/manifest.webmanifest', '/assets/icon-192.png', '/assets/icon-512.png', '/assets/icon-180.png', '/assets/favicon.svg'];
+const CACHE = 'alertabairro-shell-v8';
+const SHELL = ['/', '/assets/icon-maskable-512.png?v=brand-8', '/vision-rules.js?v=vision-6', '/vision.js?v=vision-6', '/vision-worker.mjs?v=vision-6', '/geo.js?v=vision-6', '/vendor/leaflet/leaflet.js', '/vendor/leaflet/leaflet.css', '/app.js?v=brand-8', '/styles.css?v=brand-8', '/install.js', '/manifest.webmanifest', '/assets/icon-192.png?v=brand-8', '/assets/icon-512.png?v=brand-8', '/assets/icon-180.png?v=brand-8', '/assets/favicon.svg?v=brand-8'];
 self.addEventListener('install', event => event.waitUntil(caches.open(CACHE).then(cache => cache.addAll(SHELL))));
 self.addEventListener('activate', event => event.waitUntil(caches.keys().then(keys => Promise.all(keys.filter(key => key.startsWith('alertabairro-shell-') && key !== CACHE).map(key => caches.delete(key))))));
 self.addEventListener('fetch', event => {

@@ -18,7 +18,7 @@ p{color:var(--muted)}
 .header{height:66px;background:#ffffffeb;backdrop-filter:blur(12px);border-bottom:1px solid var(--line);position:sticky;top:0;z-index:30}
 .header-inner{max-width:1160px;margin:auto;height:100%;padding:0 18px;display:flex;align-items:center;gap:12px}
 .brand{display:flex;align-items:center;gap:9px;font-size:18px;font-weight:800;letter-spacing:-.8px;white-space:nowrap}
-.brand-mark{width:35px;height:35px;border-radius:11px;background:var(--teal);color:#fff;display:grid;place-items:center}
+.brand-mark{display:block;width:40px;height:40px;flex:none;object-fit:contain}
 .desktop-nav{display:none;align-items:center;gap:3px;margin-left:auto}
 .desktop-nav a{font-size:14px;font-weight:700;color:#4B5D73;border-radius:9px;padding:10px 12px}
 .desktop-nav a:hover,.desktop-nav a.active{color:var(--teal-dark);background:var(--mint-2)}
@@ -306,7 +306,7 @@ input,select,textarea { font-size:16px; }
 .header { background:#fff; backdrop-filter:none; height:auto; min-height:72px; }
 .header-inner { min-height:72px; max-width:1040px; gap:8px; }
 .brand { font-size:19px; letter-spacing:-.8px; }
-.brand-mark { background:#1947B8; border-radius:10px 10px 10px 2px; width:34px; height:38px; }
+.login-brand .brand-mark { width:48px; height:48px; }
 .header-actions { gap:4px; }
 .icon-btn,.profile-btn { min-width:44px; min-height:48px; border:0; border-radius:12px; }
 .profile-btn { justify-content:center; }
@@ -433,7 +433,7 @@ input,select,textarea { font-size:16px; }
  .install-app { margin-bottom:24px; } .toast-host { bottom:24px; }
 }
 @media(max-width:380px) {
- .header-inner { padding:0 10px; } .brand { font-size:16px; gap:6px; } .brand-mark { width:28px; }
+ .header-inner { padding:0 10px; } .brand { font-size:16px; gap:6px; } .brand-mark { width:34px; height:34px; }
  .header-actions { gap:0; } .main { padding:20px 14px 40px; } .welcome { padding:20px; }
  .info-grid { grid-template-columns:1fr; } .login-card { padding:20px; }
  .btn-row { flex-direction:column; }
