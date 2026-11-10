@@ -39,4 +39,12 @@
 <text x="750" y="749" text-anchor="middle" fill="#FFFFFF" font-family="Inter,Segoe UI,Arial,sans-serif" font-size="21" font-weight="750">SQLite</text>
 <text x="750" y="776" text-anchor="middle" fill="#CFDDE8" font-family="Inter,Segoe UI,Arial,sans-serif" font-size="14" font-weight="500">Dados, histórico, alertas e avisos</text>
 <text x="1327" y="802" text-anchor="end" fill="#61778A" font-family="Inter,Segoe UI,Arial,sans-serif" font-size="13" font-weight="500">Futuro: APIs externas, fila, e-mail, SMS e push</text>
+<path d="M465 310 L375 310" fill="none" stroke="#087F88" stroke-width="2.5" marker-end="url(#arrow)"/>
+<rect x="40" y="260" width="335" height="100" rx="18" fill="#FFFFFF" stroke="#D8E4EC"/>
+<text x="207" y="300" text-anchor="middle" fill="#10263D" font-family="Segoe UI,Arial,sans-serif" font-size="19" font-weight="700">Mapa Leaflet / OpenStreetMap</text>
+<text x="207" y="326" text-anchor="middle" fill="#61778A" font-family="Segoe UI,Arial,sans-serif" font-size="13">Tiles externos de ruas · implementado</text>
+<path d="M1110 455 L1035 455" fill="none" stroke="#087F88" stroke-width="2.5" marker-end="url(#arrow)"/>
+<rect x="1110" y="405" width="345" height="100" rx="18" fill="#FFFFFF" stroke="#D8E4EC"/>
+<text x="1282" y="445" text-anchor="middle" fill="#10263D" font-family="Segoe UI,Arial,sans-serif" font-size="19" font-weight="700">Nomes IBGE / OpenStreetMap</text>
+<text x="1282" y="471" text-anchor="middle" fill="#61778A" font-family="Segoe UI,Arial,sans-serif" font-size="13">Catálogo local versionado · implementado</text>
 </svg>

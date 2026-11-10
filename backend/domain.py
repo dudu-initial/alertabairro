@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from datetime import datetime, timezone
 from typing import Any
+from .places import find_place
 
 
 TYPES = (
@@ -77,6 +78,13 @@ def validate_occurrence(payload: dict[str, Any]) -> dict[str, Any]:
         raise ValidationError("A descrição deve conter entre 20 e 2000 caracteres.")
     if not 2 <= len(neighborhood) <= 100:
         raise ValidationError("Informe um bairro com 2 a 100 caracteres.")
+    place = find_place(neighborhood)
+    if not place:
+        raise ValidationError("Bairro não encontrado. Selecione um bairro ou distrito de São Paulo nas sugestões.")
+    suffix = " em " + neighborhood
+    if title.endswith(suffix):
+        title = title[:-len(suffix)] + " em " + place["name"]
+    neighborhood = place["name"]
     if len(address) > 180:
         raise ValidationError("O endereço pode ter no máximo 180 caracteres.")
     severity_input = payload.get("severity", 3)
@@ -110,6 +118,10 @@ def validate_occurrence(payload: dict[str, Any]) -> dict[str, Any]:
         if not -limit <= value <= limit:
             raise ValidationError(f"{key} fora do intervalo permitido.")
         coords[key] = value
+    if (coords["latitude"] is None) != (coords["longitude"] is None):
+        raise ValidationError("Informe latitude e longitude juntas, ou deixe ambas vazias.")
+    if coords["latitude"] is not None and not (-24.1 <= coords["latitude"] <= -23.3 and -46.9 <= coords["longitude"] <= -46.3):
+        raise ValidationError("Marque um local na região de São Paulo.")
     occurred_at = payload.get("occurred_at")
     if occurred_at in (None, ""):
         occurred_at = None

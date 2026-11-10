@@ -18,6 +18,7 @@ from datetime import datetime, timedelta, timezone
 from urllib.parse import parse_qs, urlparse
 
 from .db import db_session, default_db_path, seed_database, utc_now, verify_password, make_password
+from .places import search_places, normalize_existing
 from .domain import (
     RISKS, STATUSES, TRANSITIONS, TRANSITION_EVENTS, TYPES,
     ValidationError, calculate_confidence, can_transition, classify_risk,
@@ -179,6 +180,9 @@ def make_handler(db_path: Path):
                         ],
                     })
                     return
+                if path == "/api/neighborhoods" and method == "GET":
+                    term = query.get("q", [""])[0][:100]
+                    return self.send_json(200, {"items": search_places(term), "city": "São Paulo", "updated_at": "2026-11-10"})
                 with db_session(db_path) as conn:
                     user = self.current_user(conn)
                     if path == "/api/auth/me" and method == "GET":
@@ -531,6 +535,8 @@ def create_server(
         db_path = default_db_path(PROJECT_ROOT)
     resolved = Path(db_path).resolve()
     seed_database(resolved)
+    with db_session(resolved) as conn:
+        normalize_existing(conn)
     server = ThreadingHTTPServer((host, int(port)), make_handler(resolved))
     server.db_path = resolved  # Introspection for integration tests.
     return server

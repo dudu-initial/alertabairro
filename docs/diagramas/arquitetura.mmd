@@ -9,4 +9,6 @@ flowchart TB
     AUTH --> P
     EVENTS --> P
     N --> P
-    EXT[Fontes externas: integração futura] -.-> A
+    GEO[Catálogo local: IBGE e OpenStreetMap] --> A
+    UI -->|Tiles de ruas| OSM[OpenStreetMap externo]
+    EXT[Ocorrências externas: integração futura] -.-> A

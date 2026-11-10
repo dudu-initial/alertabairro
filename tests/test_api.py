@@ -95,6 +95,41 @@ class APITests(unittest.TestCase):
         self.assertEqual(code, 200)
         self.assertEqual(body["user"]["role"], "morador")
 
+    def test_neighborhood_search_and_canonical_persistence(self):
+        code, catalog = self.request("GET", "/api/neighborhoods?q=vila%20mariana")
+        self.assertEqual(code, 200)
+        self.assertEqual(catalog["items"][0]["name"], "Vila Mariana")
+        self.assertEqual(self.request("GET", "/api/neighborhoods?q=naoexiste999")[1]["items"], [])
+        code, result = self.request("POST", "/api/occurrences", {**VALID_REPORT, "title": "Alagamento em vila mariana", "neighborhood": "vila mariana", "latitude": -23.59, "longitude": -46.63}, "morador")
+        self.assertEqual(code, 201, result)
+        code, saved = self.request("GET", f"/api/occurrences/{result['occurrence']['id']}", role="morador")
+        self.assertEqual(saved["occurrence"]["neighborhood"], "Vila Mariana")
+        self.assertEqual(saved["occurrence"]["title"], "Alagamento em Vila Mariana")
+        self.assertEqual(saved["occurrence"]["latitude"], -23.59)
+        self.assertEqual(saved["occurrence"]["longitude"], -46.63)
+        self.assertEqual(self.request("POST", "/api/occurrences", {**VALID_REPORT, "neighborhood": "Inventado999"}, "morador")[0], 400)
+
+    def test_existing_neighborhood_cleanup_preserves_records(self):
+        from backend.db import db_session
+        from backend.places import normalize_existing
+        report = self.create_report()
+        with db_session(self.server.db_path) as conn:
+            conn.execute("UPDATE occurrences SET neighborhood=? WHERE id=?", ("vila mariana", report["id"]))
+            before = conn.execute("SELECT COUNT(*) FROM occurrences").fetchone()[0]
+            normalize_existing(conn)
+            normalize_existing(conn)
+            self.assertEqual(conn.execute("SELECT COUNT(*) FROM occurrences").fetchone()[0], before)
+        saved = self.request("GET", f"/api/occurrences/{report['id']}", role="morador")[1]["occurrence"]
+        self.assertEqual(saved["neighborhood"], "Vila Mariana")
+        self.assertEqual(saved["description"], report["description"])
+
+    def test_map_assets_are_served(self):
+        for path, content_type in (("/geo.js", "javascript"), ("/vendor/leaflet/leaflet.js", "javascript"), ("/vendor/leaflet/leaflet.css", "text/css")):
+            with self.subTest(path=path), urlopen(self.base + path, timeout=5) as response:
+                self.assertEqual(response.status, 200)
+                self.assertIn(content_type, response.headers["Content-Type"])
+                self.assertGreater(len(response.read()), 100)
+
     def test_logout_revokes_server_session(self):
         code, body = self.request(
             "POST", "/api/auth/login",

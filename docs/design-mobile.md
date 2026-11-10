@@ -5,3 +5,5 @@ Identidade inspirada em sinalização de bairro: azul #1947B8, tinta #17263C, fu
 A navegação inferior permanece em celulares e tablets até 999 px. Controles principais têm pelo menos 44 px; campos de texto usam 16 px. Títulos de ocorrências quebram linha, foco é visível, Escape fecha menus e devolve o foco, e há um atalho para o conteúdo. Movimento reduzido e cores forçadas têm regras próprias. Login e cadastro permanecem disponíveis.
 
 Verificação: sintaxe JavaScript e testes HTTP; revisão estática de estilos e cálculo de contraste das cores principais. Não equivale a certificação WCAG. A revisão visual e os testes com leitor de tela/aparelho real continuam pendentes: a autorização anterior do navegador para localhost foi negada.
+
+O mapa mantém a identidade azul e acrescenta marcadores com letras B/M/A/C e cores de risco, além do símbolo ! para alerta ativo. A lista é uma alternativa ao mapa, com os mesmos filtros. A barra inferior tem cinco atalhos, incluindo Mapa. O cadastro oferece sugestões de bairros por teclado e seleção de ponto por toque, setas/centro ou coordenadas.

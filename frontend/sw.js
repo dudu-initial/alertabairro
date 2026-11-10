@@ -1,5 +1,5 @@
-const CACHE = 'alertabairro-shell-v3';
-const SHELL = ['/', '/app.js?v=design-3', '/styles.css?v=design-3', '/install.js', '/manifest.webmanifest', '/assets/icon-192.png', '/assets/icon-512.png', '/assets/icon-180.png', '/assets/favicon.svg'];
+const CACHE = 'alertabairro-shell-v4';
+const SHELL = ['/', '/geo.js?v=geo-4', '/vendor/leaflet/leaflet.js', '/vendor/leaflet/leaflet.css', '/app.js?v=geo-4', '/styles.css?v=geo-4', '/install.js', '/manifest.webmanifest', '/assets/icon-192.png', '/assets/icon-512.png', '/assets/icon-180.png', '/assets/favicon.svg'];
 self.addEventListener('install', event => event.waitUntil(caches.open(CACHE).then(cache => cache.addAll(SHELL))));
 self.addEventListener('activate', event => event.waitUntil(caches.keys().then(keys => Promise.all(keys.filter(key => key.startsWith('alertabairro-shell-') && key !== CACHE).map(key => caches.delete(key))))));
 self.addEventListener('fetch', event => {

@@ -92,9 +92,9 @@ Estas contas servem apenas para execução local. O agente e o gestor podem muda
 
 ## Telas e fluxo de demonstração
 
-A interface prioriza o morador no celular. A navegação inferior reúne **Início** (`#inicio`), **Alertas** (`#alertas`), **Registrar** (`#registrar`, formulário em três etapas curtas) e **Acompanhar** (`#acompanhar`). O menu **Mais** abre **Ocorrências** (`#ocorrencias`), **Mapa** (`#mapa`) e **Origem e confiança** (`#fontes`). Cartões e listas abrem o **Detalhe da ocorrência** (`#detalhe/:id`). Agente e gestor acessam ainda a **Fila de validação** (`#fila`) e **Monitoramento** (`#monitoramento`); **Administração** (`#administracao`) é exclusiva do gestor. São **onze telas navegáveis**, além do login.
+A interface prioriza o morador no celular. A navegação inferior reúne **Início** (`#inicio`), **Alertas** (`#alertas`), **Registrar** (`#registrar`, formulário em três etapas curtas), **Mapa** (`#mapa`) e **Relatos / Acompanhar** (`#acompanhar`). O menu **Mais** abre **Ocorrências** (`#ocorrencias`), **Mapa** (`#mapa`) e **Origem e confiança** (`#fontes`). Cartões e listas abrem o **Detalhe da ocorrência** (`#detalhe/:id`). Agente e gestor acessam ainda a **Fila de validação** (`#fila`) e **Monitoramento** (`#monitoramento`); **Administração** (`#administracao`) é exclusiva do gestor. São **onze telas navegáveis**, além do login.
 
-O Início apresenta “O que acontece no meu bairro?”, filtro por bairro e alertas ativos. O mapa é esquemático. Os estados aparecem para o morador em linguagem simples: `Registrado` como **Recebido**, `Em validação` como **Em análise**, `Alerta emitido` como **Alerta enviado**, `Em monitoramento` como **Em acompanhamento**, `Encerrado` como **Resolvido** e `Descartado` como **Não confirmado**. A API e o banco mantêm os nomes canônicos documentados no diagrama de estados.
+O Início apresenta “O que acontece no meu bairro?”, filtro por bairro e alertas ativos. O mapa tem ruas reais do OpenStreetMap, marcadores de risco, filtros e detalhes. O cadastro sugere 451 nomes de bairros/distritos de São Paulo e permite marcar o local da ocorrência. Veja [mapa e bairros](docs/mapa-e-bairros.md). Os estados aparecem para o morador em linguagem simples: `Registrado` como **Recebido**, `Em validação` como **Em análise**, `Alerta emitido` como **Alerta enviado**, `Em monitoramento` como **Em acompanhamento**, `Encerrado` como **Resolvido** e `Descartado` como **Não confirmado**. A API e o banco mantêm os nomes canônicos documentados no diagrama de estados.
 
 1. Entre como **morador**, consulte os alertas do bairro em **Início** e registre um relato nas três etapas de **Registrar**. Abra **Acompanhar** para ver o novo registro como **Recebido**.
 2. Entre como **agente**, abra **Fila de validação** e altere o relato para `Em validação` e `Confirmado`. O caminho alternativo permite `Descartado` com justificativa.
@@ -120,19 +120,23 @@ O ciclo completo e as condições de cada transição estão em [Arquitetura](do
 | `POST` | `/api/notifications/:id/read` | Marcar aviso como lido |
 | `GET` | `/api/sources` | Origens demonstrativas |
 | `GET` | `/api/users` | Usuários da demonstração, conforme permissão |
+| `GET` | `/api/neighborhoods?q=vila` | Busca pública de nomes reais de São Paulo |
 | `GET` | `/api/meta`, `/api/health` | Metadados e saúde da aplicação |
 
 As rotas protegidas usam `Authorization: Bearer <token>`. O corpo de criação e transição é JSON; a transição recebe `to`, `notes` e, para alerta, `message`.
+
+O mapa usa Leaflet 1.9.4 incluído no repositório e tiles do OpenStreetMap. A busca de bairros usa snapshots IBGE/OSM, sem chave de API. Node.js 18+ é necessário apenas para os testes JavaScript. [Fontes, licenças e comportamento do mapa](docs/mapa-e-bairros.md).
 
 ## Executar testes
 
 ```powershell
 python -m unittest discover -s tests -v
+node --test tests/geo.test.cjs
 ```
 
 Os testes cobrem validação do registro, pontuações, máquina de estados, permissões, notificações e rotas principais. A integração HTTP usa banco temporário e não altera o arquivo demonstrativo em `data/`.
 
-**Verificação do back-end:** o comando acima foi executado no Windows e os **18 testes passaram**, incluindo requisições HTTP locais à API e revogação da sessão após logout. Também foram verificadas a inicialização do banco e a carga demonstrativa. A interface reformulada requer revisão visual separada.
+**Verificação do back-end:** o comando acima foi executado no Windows e os **26 testes Python e 4 testes Node passaram**, incluindo requisições HTTP locais à API e revogação da sessão após logout. Também foram verificadas a inicialização do banco e a carga demonstrativa. A interface reformulada requer revisão visual separada.
 
 ## Diagramas e vídeo
 
@@ -146,7 +150,7 @@ Os testes cobrem validação do registro, pontuações, máquina de estados, per
 - As fontes institucional e climática são **demonstrativas**; não há ingestão automática de dados externos.
 - As notificações são internas à aplicação. Não existe envio por SMS, e-mail ou push.
 - A confiança é uma heurística explicável, não uma probabilidade estatística ou certificação oficial.
-- O mapa é esquemático; os pontos não constituem cartografia nem geocodificação precisa.
+- O mapa depende de internet para as ruas; posições são informadas pelo usuário ou demonstrativas. Não há geocodificação automática, trânsito ao vivo ou rotas. O catálogo de 451 nomes não inclui todos os nomes populares de bairros. [Fontes e limites](docs/mapa-e-bairros.md).
 - A classificação de risco ajuda a priorizar relatos, mas requer análise humana e não substitui avaliação técnica.
 - A autenticação e o SQLite atendem ao protótipo local; uma publicação em produção exigiria HTTPS, revisão de sessão, controle de abuso, política de dados e infraestrutura apropriada.
 
@@ -160,7 +164,7 @@ O repositório inclui `.gitignore` para banco local, ambiente e arquivos tempor�
 
 ## Aplicativo no celular (PWA)
 
-A interface tem quatro atalhos principais: Início, Alertas, Registrar e Acompanhar. O registro ocorre em três etapas. O manifesto, os ícones e o service worker permitem instalação em navegadores compatíveis quando servido por HTTPS (ou localhost no desenvolvimento). O botão de instalação aparece quando o navegador oferece essa opção. No iPhone, use Compartilhar → Adicionar à Tela de Início.
+A interface tem cinco atalhos principais: Início, Alertas, Mapa, Registrar e Relatos (Acompanhar). O registro ocorre em três etapas. O manifesto, os ícones e o service worker permitem instalação em navegadores compatíveis quando servido por HTTPS (ou localhost no desenvolvimento). O botão de instalação aparece quando o navegador oferece essa opção. No iPhone, use Compartilhar → Adicionar à Tela de Início.
 
 Para testar a interface em outro aparelho na mesma rede, configure `ALERTABAIRRO_HOST=0.0.0.0` e abra `http://IP-DO-COMPUTADOR:8000` no celular. O computador precisa continuar ligado e a rede/firewall deve permitir a conexão. HTTP pela rede local serve para testar a interface; a instalação PWA requer hospedagem HTTPS. O repositório GitHub contém o código, não hospeda a API Python.
 

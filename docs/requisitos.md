@@ -85,7 +85,7 @@ Como morador, quero abrir um alerta ou uma ocorrência e ver a origem, o nível 
 
 Como morador, quero filtrar o Início por bairro e acessar rapidamente Alertas e Acompanhar para localizar informações relevantes na tela do celular.
 
-**Dado** um usuário autenticado, **quando** escolher um bairro, **então** a visão inicial usa os dados da aplicação para apresentar os registros correspondentes. A barra inferior mantém Início, Alertas, Registrar e Acompanhar acessíveis.
+**Dado** um usuário autenticado, **quando** escolher um bairro, **então** a visão inicial usa os dados da aplicação para apresentar os registros correspondentes. A barra inferior mantém Início, Alertas, Mapa, Registrar e Relatos (Acompanhar) acessíveis.
 
 ## Matriz de rastreabilidade
 
@@ -106,3 +106,10 @@ Como morador, quero filtrar o Início por bairro e acessar rapidamente Alertas e
 ## Escopo de demonstração
 
 O fluxo de avaliação recomendado começa em **Início** no celular: filtrar o bairro, abrir um alerta, registrar ocorrência em três etapas e vê-la em **Acompanhar** como **Recebido**. Depois, entrar como agente, iniciar validação na **Fila**, confirmar, emitir alerta e consultar a notificação no perfil do morador. Por fim, iniciar monitoramento e encerrar. O caminho alternativo mostra um segundo relato descartado com justificativa, exibido ao morador como **Não confirmado**.
+
+## Complemento: nomes reais e mapa
+
+- RF15: sugerir bairros/distritos reais de São Paulo e persistir a grafia canônica, com acentos, rejeitando nomes desconhecidos em novos relatos.
+- RF16: exibir mapa de ruas com marcadores identificados por risco, estado, origem e confiança; filtrar bairro, risco e alertas ativos.
+- RF17: permitir marcar opcionalmente o local de uma ocorrência e persistir latitude/longitude juntas; não criar pontos para relatos sem coordenadas.
+- RNF: manter atribuição IBGE/OSM, alternativa em lista e operação do catálogo sem chamadas externas. Cobertura e verificações em [mapa e bairros](mapa-e-bairros.md).

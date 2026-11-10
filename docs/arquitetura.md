@@ -15,7 +15,7 @@ Fontes editáveis: [Mermaid](diagramas/arquitetura.mmd). Os diagramas de [sequê
 | Apresentação | SPA mobile-first em HTML, CSS e JavaScript; barra inferior do morador, menu Mais, formulário em três etapas, detalhes e área de trabalho da equipe | Requisições `fetch` para `/api`; token Bearer |
 | Aplicação e regras de negócio | Validação de entradas; cálculo de risco/confiança; autorização; transições permitidas | Chamadas internas no servidor Python |
 | Persistência e dados | Usuários, ocorrências, histórico de estados, alertas e notificações | SQLite com arquivo local configurável |
-| Fontes externas | Catálogo/identificação de origens exibido na interface; dados demonstrativos | Sem coleta automática de serviços externos nesta versão |
+| Fontes externas | Origens de ocorrências demonstrativas; nomes reais IBGE/OSM e mapa Leaflet/OSM | Catálogo geográfico local versionado; navegador consulta tiles OSM; sem ingestão automática de ocorrências externas |
 | Processamento de eventos | Reação síncrona a registro e transição; atualização do histórico | Dentro da requisição HTTP, com escrita no SQLite |
 | Serviço de notificações | Geração e leitura de avisos **internos** após emissão de alerta | Tabelas SQLite e endpoints da API |
 | Autenticação e proteção de dados | Login local; token de acesso; perfis e autorização no servidor | Cabeçalho `Authorization: Bearer ...` |
@@ -87,9 +87,13 @@ Os diagramas e o banco usam os valores canônicos da API. A interface do morador
 | Integração com Defesa Civil, meteorologia e sensores | Cruzar relatos com fontes institucionais e automáticas |
 | Filas e trabalhadores assíncronos | Processar picos de eventos sem depender da resposta HTTP |
 | Envio por e-mail, SMS ou push | Ampliar o alcance das notificações além da interface |
-| Geocodificação e mapas cartográficos | Melhorar a visualização espacial e a precisão de endereços |
+| Geocodificação de endereços e validação por polígonos | Complementar o mapa de ruas já implementado com coordenadas verificadas |
 | SSO, MFA, renovação de sessão e auditoria ampliada | Endurecer o acesso em uma implantação real |
 | PostgreSQL e observabilidade | Escalar armazenamento, métricas, logs e operação multiusuário |
 | Moderação e contestação de relatos | Permitir revisão formal de decisões e reabertura controlada |
 
 Essas ideias descrevem caminhos de evolução; não são apresentadas como recursos disponíveis no protótipo.
+
+## Localização e mapa implementados
+
+`backend/places.py` normaliza nomes na criação e na inicialização de registros existentes. O endpoint público `/api/neighborhoods` consulta snapshots geográficos locais. `frontend/geo.js` apresenta mapa Leaflet com tiles do OpenStreetMap, filtros de risco, lista acessível e seleção opcional de coordenadas. A API exige pares de coordenadas válidas e o SQLite as persiste. Centros de bairros só orientam a navegação. Consulte [fontes, atribuição e limitações](mapa-e-bairros.md).

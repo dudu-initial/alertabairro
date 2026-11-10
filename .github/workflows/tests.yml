@@ -14,3 +14,8 @@ jobs:
           python-version: '3.12'
       - name: Run tests
         run: python -m unittest discover -s tests -v
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+      - name: Test geographic UI rules
+        run: node --test tests/geo.test.cjs
