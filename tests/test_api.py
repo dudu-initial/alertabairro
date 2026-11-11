@@ -243,6 +243,44 @@ class APITests(unittest.TestCase):
             self.assertEqual(code, 200, body)
         self.assertEqual(body["occurrence"]["status"], "Encerrado")
 
+    def test_notification_read_all_is_private_and_idempotent(self):
+        report = self.create_report()
+        path = f"/api/occurrences/{report['id']}/transition"
+        for target in ("Em validação", "Confirmado", "Alerta emitido"):
+            code, body = self.request("POST", path, {
+                "to": target, "message": "Evite a via durante a vistoria da equipe local."
+            }, "agente")
+            self.assertIn(code, (200, 201), body)
+        other_before = self.request("GET", "/api/notifications", role="agente")[1]
+        own_before = self.request("GET", "/api/notifications", role="morador")[1]
+        self.assertGreater(own_before["unread"], 0)
+        code, body = self.request("POST", "/api/notifications/read-all", {}, "morador")
+        self.assertEqual(code, 200, body)
+        self.assertEqual(body["updated"], own_before["unread"])
+        own_after = self.request("GET", "/api/notifications", role="morador")[1]
+        self.assertEqual(own_after["unread"], 0)
+        self.assertTrue(all(item["is_read"] for item in own_after["items"]))
+        self.assertEqual(self.request("GET", "/api/notifications", role="agente")[1], other_before)
+        self.assertEqual(self.request("POST", "/api/notifications/read-all", {}, "morador")[1]["updated"], 0)
+
+    def test_notification_permissions(self):
+        for method, path in (("GET", "/api/notifications"), ("POST", "/api/notifications/read-all"), ("POST", "/api/notifications/1/read")):
+            self.assertEqual(self.request(method, path)[0], 401)
+        notice = self.request("GET", "/api/notifications", role="agente")[1]["items"][0]
+        before = self.request("GET", "/api/notifications", role="agente")[1]
+        self.assertEqual(self.request("POST", f"/api/notifications/{notice['id']}/read", {}, "morador")[0], 404)
+        self.assertEqual(self.request("GET", "/api/notifications", role="agente")[1], before)
+
+    def test_notifications_include_occurrence_context(self):
+        code, body = self.request("GET", "/api/notifications", role="gestor")
+        self.assertEqual(code, 200)
+        self.assertTrue(body["items"])
+        for notice in body["items"]:
+            occurrence = self.request("GET", f"/api/occurrences/{notice['occurrence_id']}", role="gestor")[1]["occurrence"]
+            for field in ("neighborhood", "risk_level", "confidence_score", "source_label", "status"):
+                self.assertEqual(notice[field], occurrence[field])
+            self.assertIsInstance(notice["is_read"], bool)
+
     def test_discard_requires_justification(self):
         report = self.create_report()
         path = f"/api/occurrences/{report['id']}/transition"

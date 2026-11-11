@@ -92,7 +92,7 @@ Estas contas servem apenas para execução local. O agente e o gestor podem muda
 
 ## Telas e fluxo de demonstração
 
-A interface prioriza o morador no celular. A navegação inferior reúne **Início** (`#inicio`), **Alertas** (`#alertas`), **Registrar** (`#registrar`, formulário em três etapas curtas), **Mapa** (`#mapa`) e **Relatos / Acompanhar** (`#acompanhar`). O menu **Mais** abre **Ocorrências** (`#ocorrencias`), **Mapa** (`#mapa`) e **Origem e confiança** (`#fontes`). Cartões e listas abrem o **Detalhe da ocorrência** (`#detalhe/:id`). Agente e gestor acessam ainda a **Fila de validação** (`#fila`) e **Monitoramento** (`#monitoramento`); **Administração** (`#administracao`) é exclusiva do gestor. São **onze telas navegáveis**, além do login.
+A interface prioriza o morador no celular. A navegação inferior reúne **Início** (`#inicio`), **Alertas** (`#alertas`), **Registrar** (`#registrar`, formulário em três etapas curtas), **Mapa** (`#mapa`) e **Relatos / Acompanhar** (`#acompanhar`). O menu **Mais** abre **Ocorrências** (`#ocorrencias`), **Mapa** (`#mapa`) e **Origem e confiança** (`#fontes`). Cartões e listas abrem o **Detalhe da ocorrência** (`#detalhe/:id`). Agente e gestor acessam ainda a **Fila de validação** (`#fila`) e **Monitoramento** (`#monitoramento`); **Administração** (`#administracao`) é exclusiva do gestor. O sino e o menu **Mais** abrem a **Central de notificações** (`#notificacoes`). São **doze telas navegáveis**, além de login e cadastro.
 
 O Início apresenta “O que acontece no meu bairro?”, filtro por bairro e alertas ativos. O mapa tem ruas reais do OpenStreetMap, marcadores de risco, filtros e detalhes. O cadastro sugere 451 nomes de bairros/distritos de São Paulo e permite marcar o local da ocorrência. Veja [mapa e bairros](docs/mapa-e-bairros.md). Os estados aparecem para o morador em linguagem simples: `Registrado` como **Recebido**, `Em validação` como **Em análise**, `Alerta emitido` como **Alerta enviado**, `Em monitoramento` como **Em acompanhamento**, `Encerrado` como **Resolvido** e `Descartado` como **Não confirmado**. A API e o banco mantêm os nomes canônicos documentados no diagrama de estados.
 
@@ -117,7 +117,8 @@ O ciclo completo e as condições de cada transição estão em [Arquitetura](do
 | `POST` | `/api/occurrences/:id/transition` | Validar, descartar, alertar, monitorar ou encerrar |
 | `GET` | `/api/alerts` | Alertas emitidos |
 | `GET` | `/api/notifications` | Notificações internas do usuário |
-| `POST` | `/api/notifications/:id/read` | Marcar aviso como lido |
+| `POST` | `/api/notifications/:id/read` | Marcar aviso próprio como lido |
+| `POST` | `/api/notifications/read-all` | Marcar todos os avisos do usuário como lidos |
 | `GET` | `/api/sources` | Origens demonstrativas |
 | `GET` | `/api/users` | Usuários da demonstração, conforme permissão |
 | `DELETE` | `/api/occurrences/:id` | Excluir ocorrência; somente agente e gestor |
@@ -137,7 +138,7 @@ node --test tests/*.test.cjs
 
 Os testes cobrem validação do registro, pontuações, máquina de estados, permissões, notificações e rotas principais. A integração HTTP usa banco temporário e não altera o arquivo demonstrativo em `data/`.
 
-**Verificação do back-end:** o comando acima foi executado no Windows e os **35 testes Python e 15 testes Node passaram**, incluindo requisições HTTP locais à API e revogação da sessão após logout. Também foram verificadas a inicialização do banco e a carga demonstrativa. A interface reformulada requer revisão visual separada.
+**Verificação do back-end:** o comando acima foi executado no Windows e os **38 testes Python e 25 testes Node passaram**, incluindo requisições HTTP locais à API e revogação da sessão após logout. Também foram verificadas a inicialização do banco e a carga demonstrativa. A interface reformulada requer revisão visual separada.
 
 ## Diagramas e vídeo
 
@@ -199,3 +200,11 @@ Na etapa de urgência, Baixa usa verde, Média amarelo e Alta vermelho, com text
 ## Exclusão de ocorrências pela equipe
 
 Agente e gestor podem acessar **Todas as ocorrências**, abrir um registro e expandir **Excluir ocorrência**. A confirmação mostra o número e o título do registro; **Cancelar** mantém os dados. **Excluir definitivamente** apaga a ocorrência e, na mesma transação, seu histórico, alerta, notificações e metadados de IA. A ação está disponível em qualquer estado e não pode ser desfeita. Moradores não recebem o controle e a API rejeita suas tentativas com 403. Requisições sem sessão recebem 401; registro inexistente recebe 404.
+
+## Central de notificações
+
+Abra o sino no cabeçalho ou **Mais → Central de notificações**. Os filtros **Todas**, **Não lidas** e **Lidas** organizam os avisos da conta. Cada cartão mostra mensagem, horário, bairro, risco, origem e indicador de confiança da ocorrência. **Ver ocorrência** abre os detalhes e marca o aviso como lido; também é possível marcar individualmente sem sair da central ou usar **Marcar todas como lidas**.
+
+O contador e a central consultam a API a cada 30 segundos enquanto o app está visível, ao voltar para a aba e ao tocar em **Atualizar**. A tela mostra a última atualização bem-sucedida; falhas de conexão mantêm os avisos anteriores e exibem uma mensagem. A atualização não recarrega o formulário de registro nem a câmera. As marcações persistem no SQLite e afetam somente a conta autenticada. São notificações internas, sem push em segundo plano.
+
+Verificação: testes HTTP em banco temporário cobrem isolamento entre contas, autenticação, leitura em lote repetível e contexto dos avisos. Testes Node cobrem filtros, escape de conteúdo, contador, atualização, falhas de conexão e respostas atrasadas após troca de conta. A revisão visual em navegador e os testes em aparelho celular real continuam pendentes; os testes Node usam ambiente simulado.

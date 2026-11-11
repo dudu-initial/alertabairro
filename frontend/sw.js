@@ -1,5 +1,5 @@
-const CACHE = 'alertabairro-shell-v9';
-const SHELL = ['/', '/assets/icon-maskable-512.png?v=brand-8', '/vision-rules.js?v=vision-6', '/vision.js?v=vision-6', '/vision-worker.mjs?v=vision-6', '/geo.js?v=vision-6', '/vendor/leaflet/leaflet.js', '/vendor/leaflet/leaflet.css', '/app.js?v=delete-9', '/styles.css?v=delete-9', '/install.js', '/manifest.webmanifest', '/assets/icon-192.png?v=brand-8', '/assets/icon-512.png?v=brand-8', '/assets/icon-180.png?v=brand-8', '/assets/favicon.svg?v=brand-8'];
+const CACHE = 'alertabairro-shell-v10';
+const SHELL = ['/notifications.js?v=notifications-10', '/', '/assets/icon-maskable-512.png?v=brand-8', '/vision-rules.js?v=vision-6', '/vision.js?v=vision-6', '/vision-worker.mjs?v=vision-6', '/geo.js?v=vision-6', '/vendor/leaflet/leaflet.js', '/vendor/leaflet/leaflet.css', '/app.js?v=notifications-10', '/styles.css?v=notifications-10', '/install.js', '/manifest.webmanifest', '/assets/icon-192.png?v=brand-8', '/assets/icon-512.png?v=brand-8', '/assets/icon-180.png?v=brand-8', '/assets/favicon.svg?v=brand-8'];
 self.addEventListener('install', event => event.waitUntil(caches.open(CACHE).then(cache => cache.addAll(SHELL))));
 self.addEventListener('activate', event => event.waitUntil(caches.keys().then(keys => Promise.all(keys.filter(key => key.startsWith('alertabairro-shell-') && key !== CACHE).map(key => caches.delete(key))))));
 self.addEventListener('fetch', event => {

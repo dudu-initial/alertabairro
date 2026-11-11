@@ -216,6 +216,9 @@ def make_handler(db_path: Path):
                         return self.list_alerts(conn)
                     if path == "/api/notifications" and method == "GET":
                         return self.list_notifications(conn, user)
+                    if path == "/api/notifications/read-all" and method == "POST":
+                        cursor = conn.execute("UPDATE notifications SET is_read=1 WHERE user_id=? AND is_read=0", (user["id"],))
+                        return self.send_json(200, {"ok": True, "updated": cursor.rowcount})
                     match = re.fullmatch(r"/api/notifications/(\d+)/read", path)
                     if match and method == "POST":
                         return self.read_notification(conn, user, int(match.group(1)))
@@ -503,8 +506,10 @@ def make_handler(db_path: Path):
         def list_notifications(self, conn: sqlite3.Connection, user: dict) -> None:
             rows = conn.execute(
                 """SELECT n.id,n.occurrence_id,n.alert_id,n.title,n.body,
-                   n.is_read,n.created_at,o.neighborhood,o.risk_level
+                   n.is_read,n.created_at,o.neighborhood,o.risk_level,
+                   o.confidence_score,o.status,s.name AS source_label
                    FROM notifications n JOIN occurrences o ON o.id=n.occurrence_id
+                   JOIN sources s ON s.id=o.source_id
                    WHERE n.user_id=? ORDER BY n.created_at DESC,n.id DESC""",
                 (user["id"],),
             ).fetchall()

@@ -5,7 +5,7 @@
   const S = {
     token: localStorage.getItem('ab_token') || '', user: null, meta: null,
     neighborhood: localStorage.getItem('ab_neighborhood') || '',
-    notices: [], unread: 0, menu: '', renderId: 0, places: null, mapItems: [],
+    notices: [], unread: 0, noticeFilter: 'all', noticesUpdated: '', noticesError: '', noticesRequest: 0, menu: '', renderId: 0, places: null, mapItems: [],
     alertTab: 'active', search: '', reportStep: 1, report: {}, transitionTo: ''
   };
   const paths = {
@@ -64,6 +64,7 @@
   function errorCard(message) { return `<div class="card error-card"><div class="empty"><div class="empty-icon">${icon('alert',22)}</div><h3>Não foi possível carregar</h3><p>${esc(message)}</p><button class="btn btn-secondary" data-action="retry">Tentar novamente</button></div></div>`; }
   function pageHead(kicker,title,description,action='') { return `<div class="page-head page-head-row"><div><div class="kicker">${esc(kicker)}</div><h1>${esc(title)}</h1><p>${esc(description)}</p></div>${action?`<div class="actions">${action}</div>`:''}</div>`; }
   async function api(path,options={}) {
+    const requestToken=S.token;
     const headers={Accept:'application/json',...options.headers};
     if(options.body!==undefined) headers['Content-Type']='application/json';
     if(S.token) headers.Authorization=`Bearer ${S.token}`;
@@ -72,23 +73,70 @@
     catch { throw new Error('Sem conexão com a API. Verifique se o servidor está em execução.'); }
     let data={}; try { data=await response.json(); } catch { /* Empty response. */ }
     if(!response.ok) {
-      if(response.status===401 && path!=='/api/auth/login') { clearSession(); throw new Error('Sua sessão expirou. Entre novamente.'); }
+      if(response.status===401 && path!=='/api/auth/login') { if(S.token===requestToken)clearSession(); throw new Error('Sua sessão expirou. Entre novamente.'); }
       throw new Error(data.error || data.message || `Falha na solicitação (${response.status}).`);
     }
     return data;
   }
-  function clearSession() { S.token='';S.user=null;localStorage.removeItem('ab_token');loginPage(); }
+  function clearSession() { S.token='';S.user=null;S.notices=[];S.unread=0;S.noticesUpdated='';S.noticesError='';S.noticeFilter='all';S.noticesRequest++;localStorage.removeItem('ab_token');loginPage(); }
   async function logout() { try { await api('/api/auth/logout',{method:'POST',body:'{}'}); } catch { /* Local logout still completes. */ } clearSession(); toast('Você saiu da conta.'); }
-  async function syncNotices() { if(!S.user)return;try{const data=await api('/api/notifications');S.notices=data.items||[];S.unread=num(data.unread);const bell=root.querySelector('[data-action="notices"]');if(bell)bell.innerHTML=`${icon('bell',19)}${S.unread?'<i class="dot"></i>':''}`;}catch{/* Main screen remains available. */} }
+  const bellContent=()=>`${icon('bell',19)}${S.unread?`<span class="notice-count" aria-hidden="true">${S.unread>99?'99+':S.unread}</span>`:''}`;
+  function refreshNoticesView() {
+    const bell=root.querySelector('[data-action="notices"]');
+    if(bell){bell.innerHTML=bellContent();bell.setAttribute('aria-label',`Notificações, ${S.unread} não lidas`);}
+    const results=root.querySelector('#notification-results');
+    if(!results)return;
+    const markup=AlertaNotifications.cards(S.notices,S.noticeFilter,dateTime);
+    if(results._noticeMarkup!==markup){
+      const focused=results.contains(document.activeElement), focusId=document.activeElement?.id;
+      results.innerHTML=markup;results._noticeMarkup=markup;
+      if(focused)(document.getElementById(focusId)||root.querySelector('#notice-results-title'))?.focus({preventScroll:true});
+    }
+    root.querySelectorAll('[data-notice-filter]').forEach(button=>button.setAttribute('aria-pressed',String(button.dataset.noticeFilter===S.noticeFilter)));
+    root.querySelector('#notice-results-title').textContent=`${AlertaNotifications.filter(S.notices,S.noticeFilter).length} aviso(s) · ${S.unread} não lido(s)`;
+    root.querySelector('#notices-read-all').disabled=!S.unread;
+    root.querySelector('#notices-status').textContent=S.noticesError || (S.noticesUpdated?`Atualizada às ${S.noticesUpdated}. Atualização automática a cada 30 segundos com o app aberto.`:'Aguardando atualização.');
+    root.querySelector('#notices-status').classList.toggle('notice-error',!!S.noticesError);
+  }
+  async function syncNotices() {
+    if(!S.user)return false;
+    const token=S.token, request=++S.noticesRequest;
+    try{
+      const data=await api('/api/notifications');
+      if(token!==S.token||request!==S.noticesRequest)return false;
+      S.notices=data.items||[];S.unread=num(data.unread);S.noticesError='';
+      S.noticesUpdated=new Intl.DateTimeFormat('pt-BR',{hour:'2-digit',minute:'2-digit',second:'2-digit'}).format(new Date());
+      refreshNoticesView();return true;
+    }catch(err){
+      if(token===S.token&&request===S.noticesRequest){S.noticesError=`Não foi possível atualizar. ${err.message} Os avisos exibidos podem estar desatualizados.`;refreshNoticesView();}
+      return false;
+    }
+  }
+  async function notificationsPage() {
+    await syncNotices();
+    return `${pageHead('Seus avisos','Central de notificações','Acompanhe os alertas enviados pela equipe à comunidade.')}<section class="notification-center" aria-label="Notificações"><div class="notification-toolbar"><div class="notification-filters" role="group" aria-label="Filtrar notificações">${[['all','Todas'],['unread','Não lidas'],['read','Lidas']].map(([key,label])=>`<button id="notice-filter-${key}" class="btn btn-secondary" data-notice-filter="${key}" aria-pressed="${S.noticeFilter===key}">${label}</button>`).join('')}</div><div class="notification-actions"><button id="notices-refresh" class="btn btn-secondary" data-action="refresh-notices">Atualizar</button><button id="notices-read-all" class="btn btn-secondary" data-action="read-all-notices">Marcar todas como lidas</button></div></div><p id="notices-status" class="notification-status" role="status"></p><h2 id="notice-results-title" class="notification-total" tabindex="-1"></h2><div id="notification-results" class="notification-list"></div></section>`;
+  }
+  async function markNoticesRead(button,id) {
+    if(button.disabled)return;
+    const token=S.token;button.disabled=true;
+    try{
+      await api(id?`/api/notifications/${encodeURIComponent(id)}/read`:'/api/notifications/read-all',{method:'POST',body:'{}'});
+      if(token!==S.token)return;
+      S.notices=S.notices.map(item=>!id||String(item.id)===String(id)?{...item,is_read:true}:item);
+      S.unread=S.notices.filter(item=>!item.is_read).length;S.noticesRequest++;
+      refreshNoticesView();toast(id?'Notificação marcada como lida.':'Todas as notificações foram marcadas como lidas.','success');
+      await syncNotices();
+    }catch(err){if(token===S.token)toast(err.message,'error');}
+    finally{if(button.isConnected)button.disabled=id?false:!S.unread;}
+  }
   async function getAllOccurrences() { const items=[];let page=1,total=0;do{const data=await api(`/api/occurrences?limit=100&page=${page}`);items.push(...(data.items||[]));total=num(data.total);page++;if(!(data.items||[]).length)break;}while(items.length<total&&page<=100);return items; }
-  function noticePopover() { return `<div class="popover" id="active-popover"><div class="popover-title">Notificações${S.unread?` · ${S.unread} nova${S.unread===1?'':'s'}`:''}</div>${S.notices.length?S.notices.slice(0,10).map(item=>`<div class="notice-item ${item.is_read?'':'unread'}" data-notice="${esc(item.id)}" role="button" tabindex="0"><span class="notice-icon">${icon('bell',17)}</span><span><strong>${esc(item.title||'Alerta do bairro')}</strong><p>${esc(item.body||'')}</p><small>${dateTime(item.created_at)}</small></span></div>`).join(''):`<div class="empty"><p>Nenhuma notificação por enquanto.</p></div>`}<a class="menu-item" href="#alertas">${icon('bell',17)} Ver todos os alertas</a></div>`; }
-  function morePopover() { return `<div class="popover" id="active-popover"><div class="menu-caption">Explorar</div><a class="menu-item" href="#ocorrencias">${icon('list',18)} Todas as ocorrências</a><a class="menu-item" href="#mapa">${icon('map',18)} Mapa por bairro</a><a class="menu-item" href="#fontes">${icon('info',18)} Origem e confiança</a>${isStaff()?`<div class="menu-divider"></div><div class="menu-caption">Área do agente</div><a class="menu-item" href="#fila">${icon('shield',18)} Fila de análise</a><a class="menu-item" href="#monitoramento">${icon('activity',18)} Monitoramento</a>${S.user.role==='gestor'?`<a class="menu-item" href="#administracao">${icon('users',18)} Administração</a>`:''}`:''}</div>`; }
+  function morePopover() { return `<div class="popover" id="active-popover"><div class="menu-caption">Explorar</div><a class="menu-item" href="#notificacoes">${icon('bell',18)} Central de notificações</a><a class="menu-item" href="#ocorrencias">${icon('list',18)} Todas as ocorrências</a><a class="menu-item" href="#mapa">${icon('map',18)} Mapa por bairro</a><a class="menu-item" href="#fontes">${icon('info',18)} Origem e confiança</a>${isStaff()?`<div class="menu-divider"></div><div class="menu-caption">Área do agente</div><a class="menu-item" href="#fila">${icon('shield',18)} Fila de análise</a><a class="menu-item" href="#monitoramento">${icon('activity',18)} Monitoramento</a>${S.user.role==='gestor'?`<a class="menu-item" href="#administracao">${icon('users',18)} Administração</a>`:''}`:''}</div>`; }
   function profilePopover() { return `<div class="popover" id="active-popover"><div class="popover-title">${esc(S.user?.name)}<small style="display:block;color:var(--muted);font-weight:500">${esc(roleLabel(S.user?.role))} · conta local</small></div><button class="menu-item" data-action="logout">${icon('logout',18)} Sair da conta</button></div>`; }
-  function setPopover(type) { root.querySelector('#active-popover')?.remove();S.menu=S.menu===type?'':type;if(S.menu){const html=type==='more'?morePopover():type==='notices'?noticePopover():profilePopover();root.querySelector('.header')?.insertAdjacentHTML('beforeend',html);root.querySelector('#active-popover a, #active-popover button, #active-popover [tabindex]')?.focus();}root.querySelectorAll('[data-action="more"],[data-action="notices"],[data-action="profile"]').forEach(el=>el.setAttribute('aria-expanded',String(el.dataset.action===S.menu))); }
+  function setPopover(type) { root.querySelector('#active-popover')?.remove();S.menu=S.menu===type?'':type;if(S.menu){const html=type==='more'?morePopover():profilePopover();root.querySelector('.header')?.insertAdjacentHTML('beforeend',html);root.querySelector('#active-popover a, #active-popover button, #active-popover [tabindex]')?.focus();}root.querySelectorAll('[data-action="more"],[data-action="profile"]').forEach(el=>el.setAttribute('aria-expanded',String(el.dataset.action===S.menu))); }
   function shell() {
     const active=route()==='detalhe'?'acompanhar':route();
     const primary=[['inicio','home','Início'],['alertas','bell','Alertas'],['mapa','map','Mapa'],['registrar','plus','Registrar'],['acompanhar','list','Relatos']];
-    return `<div class="app"><a class="skip-link" href="#main-content">Pular para o conteúdo</a><header class="header"><div class="header-inner"><a class="brand" href="#inicio" aria-label="AlertaBairro, Início"><img class="brand-mark" src="/assets/favicon.svg?v=brand-8" width="40" height="40" alt="">AlertaBairro</a><nav class="desktop-nav" aria-label="Navegação principal">${primary.map(([key,ico,label])=>`<a href="#${key}" class="${active===key?'active':''}" ${active===key?'aria-current="page"':''}>${esc(label)}</a>`).join('')}</nav><span class="header-spacer"></span><div class="header-actions"><button class="icon-btn" data-action="more" aria-label="Mais opções" aria-expanded="false" aria-haspopup="true">${icon('menu',19)}</button><button class="icon-btn" data-action="notices" aria-label="Notificações" aria-expanded="false" aria-haspopup="true">${icon('bell',19)}${S.unread?'<i class="dot"></i>':''}</button><button class="profile-btn" data-action="profile" aria-label="Perfil de ${esc(S.user?.name)}" aria-expanded="false" aria-haspopup="true"><span class="avatar">${esc(initials(S.user?.name))}</span><span class="name">${esc(S.user?.name)}<small>${esc(roleLabel(S.user?.role))}</small></span></button></div></div></header><main class="main" id="main-content" tabindex="-1">${loading()}</main><nav class="bottom-nav" aria-label="Navegação principal">${primary.map(([key,ico,label])=>`<a href="#${key}" class="${active===key?'active':''}" ${active===key?'aria-current="page"':''}>${icon(ico,20)}<span>${esc(label)}</span></a>`).join('')}</nav></div>`;
+    return `<div class="app"><a class="skip-link" href="#main-content">Pular para o conteúdo</a><header class="header"><div class="header-inner"><a class="brand" href="#inicio" aria-label="AlertaBairro, Início"><img class="brand-mark" src="/assets/favicon.svg?v=brand-8" width="40" height="40" alt="">AlertaBairro</a><nav class="desktop-nav" aria-label="Navegação principal">${primary.map(([key,ico,label])=>`<a href="#${key}" class="${active===key?'active':''}" ${active===key?'aria-current="page"':''}>${esc(label)}</a>`).join('')}</nav><span class="header-spacer"></span><div class="header-actions"><button class="icon-btn" data-action="more" aria-label="Mais opções" aria-expanded="false" aria-haspopup="true">${icon('menu',19)}</button><button class="icon-btn" data-action="notices" aria-label="Notificações, ${S.unread} não lidas">${bellContent()}</button><button class="profile-btn" data-action="profile" aria-label="Perfil de ${esc(S.user?.name)}" aria-expanded="false" aria-haspopup="true"><span class="avatar">${esc(initials(S.user?.name))}</span><span class="name">${esc(S.user?.name)}<small>${esc(roleLabel(S.user?.role))}</small></span></button></div></div></header><main class="main" id="main-content" tabindex="-1">${loading()}</main><nav class="bottom-nav" aria-label="Navegação principal">${primary.map(([key,ico,label])=>`<a href="#${key}" class="${active===key?'active':''}" ${active===key?'aria-current="page"':''}>${icon(ico,20)}<span>${esc(label)}</span></a>`).join('')}</nav></div>`;
   }
   function loginPage() {
     AlertaVision.destroy();
@@ -222,7 +270,7 @@
     const list=users.items||[];
     return `${workspaceHead('Administração','Visão local da operação e dos perfis de demonstração.','administracao')}<div class="stat-strip" style="margin-bottom:17px"><div class="stat"><strong>${num(dashboard.stats?.total)}</strong><span>Ocorrências</span></div><div class="stat"><strong>${num(dashboard.stats?.active)}</strong><span>Em andamento</span></div><div class="stat"><strong>${num(dashboard.stats?.alerts)}</strong><span>Alertas emitidos</span></div><div class="stat"><strong>${health.status==='ok'?'OK':'?'}</strong><span>API local</span></div></div><section class="card"><div class="section-head"><div><h2>Usuários de demonstração</h2><p>A API verifica a permissão em cada operação.</p></div></div><div class="simple-list">${list.map(u=>`<div class="list-item" style="cursor:default"><span class="avatar">${esc(initials(u.name))}</span><span class="item-main"><span class="item-title">${esc(u.name)}</span><span class="item-sub">${esc(u.email)}</span></span><span class="pill active">${esc(roleLabel(u.role))}</span></div>`).join('')}</div></section><div class="note" style="margin-top:16px">Moradores registram e acompanham. Agentes validam e emitem alertas. Gestores também consultam os usuários locais.</div>`;
   }
-  const pages={inicio:homePage,alertas:alertsPage,registrar:reportPage,acompanhar:followPage,ocorrencias:occurrencesPage,mapa:mapPage,fontes:sourcesPage,detalhe:detailPage,fila:queuePage,monitoramento:monitoringPage,administracao:administrationPage};
+  const pages={notificacoes:notificationsPage,inicio:homePage,alertas:alertsPage,registrar:reportPage,acompanhar:followPage,ocorrencias:occurrencesPage,mapa:mapPage,fontes:sourcesPage,detalhe:detailPage,fila:queuePage,monitoramento:monitoringPage,administracao:administrationPage};
   async function render() {
     if(!S.user){loginPage();return;}
     S.menu='';S.transitionTo='';
@@ -230,12 +278,13 @@
     const alertFocus=document.activeElement?.dataset?.alertTab;
     const current=++S.renderId;
     const key=pages[route()]?route():'inicio';
-    document.title=`${({inicio:'Início',alertas:'Alertas',registrar:'Registrar',acompanhar:'Acompanhar',ocorrencias:'Ocorrências',mapa:'Mapa',fontes:'Origem e confiança',detalhe:'Detalhe',fila:'Fila de análise',monitoramento:'Monitoramento',administracao:'Administração'})[key]} · AlertaBairro`;
+    document.title=`${({notificacoes:'Notificações',inicio:'Início',alertas:'Alertas',registrar:'Registrar',acompanhar:'Acompanhar',ocorrencias:'Ocorrências',mapa:'Mapa',fontes:'Origem e confiança',detalhe:'Detalhe',fila:'Fila de análise',monitoramento:'Monitoramento',administracao:'Administração'})[key]} · AlertaBairro`;
     AlertaVision.destroy();
     AlertaGeo.destroy();
     root.innerHTML=shell();
     const main=root.querySelector('#main-content');
     try { const html=await pages[key](); if(current!==S.renderId||!S.user)return; main.innerHTML=html;
+      refreshNoticesView();
       if(key==='mapa')AlertaGeo.mountMap(S.mapItems,statusLabel);
       if(key==='registrar'&&S.reportStep===2)AlertaGeo.mountPicker(S.report,S.places);
       if(key==='registrar'&&S.reportStep===1)AlertaVision.mount(S.report);
@@ -308,7 +357,12 @@
   document.addEventListener('click',async event=>{
     if(event.target.closest('.skip-link')){event.preventDefault();root.querySelector('#main-content')?.focus();return;}
     const action=event.target.closest('[data-action]')?.dataset.action;
-    if(['more','notices','profile'].includes(action)){setPopover(action);return;}
+    if(action==='notices'){navigate('notificacoes');return;}
+    if(action==='refresh-notices'){const button=event.target.closest('button');button.disabled=true;await syncNotices();if(button.isConnected)button.disabled=false;return;}
+    if(action==='read-all-notices'){await markNoticesRead(event.target.closest('button'));return;}
+    const noticeFilter=event.target.closest('[data-notice-filter]');if(noticeFilter){S.noticeFilter=noticeFilter.dataset.noticeFilter;refreshNoticesView();return;}
+    const noticeRead=event.target.closest('[data-notice-read]');if(noticeRead){await markNoticesRead(noticeRead,noticeRead.dataset.noticeRead);return;}
+    if(['more','profile'].includes(action)){setPopover(action);return;}
     if(action==='register-account'){navigate('cadastro');return;}
     if(action==='back-login'){navigate('entrar');return;}
     if(action==='logout'){await logout();return;}
@@ -322,12 +376,12 @@
     const neighborhood=event.target.closest('[data-neighborhood]');if(neighborhood){S.neighborhood=neighborhood.dataset.neighborhood;localStorage.setItem('ab_neighborhood',S.neighborhood);navigate('inicio');return;}
     const tab=event.target.closest('[data-alert-tab]');if(tab){S.alertTab=tab.dataset.alertTab;render();return;}
     const transition=event.target.closest('[data-transition]');if(transition){S.transitionTo=transition.dataset.transition;const slot=root.querySelector('#transition-slot');if(slot){slot.innerHTML=transitionForm(S.transitionTo);slot.scrollIntoView({block:'nearest',behavior:'smooth'});}return;}
-    const notice=event.target.closest('[data-notice]');if(notice){const item=S.notices.find(x=>String(x.id)===notice.dataset.notice);try{await api(`/api/notifications/${notice.dataset.notice}/read`,{method:'POST',body:'{}'});await syncNotices();}catch(err){toast(err.message,'error');}if(item?.occurrence_id)navigate(`detalhe/${item.occurrence_id}`);else setPopover('notices');return;}
+    const notice=event.target.closest('[data-notice]');if(notice){const item=S.notices.find(x=>String(x.id)===notice.dataset.notice), token=S.token;if(!item)return;if(!item.is_read)await markNoticesRead(notice,notice.dataset.notice);if(token===S.token)navigate(`detalhe/${item.occurrence_id}`);return;}
     if(event.target.closest('#active-popover a[href^="#"]')){root.querySelector('#active-popover')?.remove();S.menu='';return;}
     if(S.menu&&!event.target.closest('#active-popover')){root.querySelector('#active-popover')?.remove();S.menu='';}
   });
   document.addEventListener('keydown',event=>{
-    if((event.key==='Enter'||event.key===' ')&&event.target.matches('[data-notice]')){event.preventDefault();event.target.click();}
+    if((event.key==='Enter'||event.key===' ')&&event.target.matches('[role="button"][data-notice]')){event.preventDefault();event.target.click();}
     if(event.key==='Escape'&&S.menu){const trigger=root.querySelector(`[data-action="${S.menu}"]`);root.querySelector('#active-popover')?.remove();S.menu='';trigger?.setAttribute('aria-expanded','false');trigger?.focus();}
   });
   window.addEventListener('hashchange',()=>{if(location.hash==='#cadastro'){registrationPage();return;}if(location.hash==='#entrar'){loginPage();return;}if(S.user)render();else loginPage();});
@@ -338,5 +392,7 @@
     try { const data=await api('/api/auth/me');S.user=data.user;try{S.meta=await api('/api/meta');}catch{S.meta=null;}await syncNotices();render(); }
     catch { clearSession(); }
   }
+  setInterval(()=>{if(S.user&&!document.hidden)syncNotices();},30000);
+  document.addEventListener('visibilitychange',()=>{if(S.user&&!document.hidden)syncNotices();});
   init();
 })();

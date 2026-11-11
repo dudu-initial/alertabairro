@@ -544,3 +544,32 @@ input,select,textarea { font-size:16px; }
 .delete-confirmation .btn { flex:1 1 150px; }
 #delete-error { color:#8E222B; margin:12px 0 0; }
 #delete-error:empty { display:none; }
+
+/* Notification center: readable cards and touch targets on narrow screens. */
+.notice-count { position:absolute; top:-3px; right:-5px; min-width:21px; height:21px; display:grid; place-items:center; padding:0 4px; background:#8E222B; color:#fff; border:2px solid #fff; border-radius:12px; font-size:11px; font-weight:700; line-height:1; }
+.notification-center { max-width:840px; margin-inline:auto; }
+.notification-toolbar,.notification-actions,.notification-filters { display:flex; gap:10px; flex-wrap:wrap; }
+.notification-toolbar { justify-content:space-between; align-items:center; }
+.notification-filters { gap:6px; }
+.notification-filters .btn[aria-pressed=true] { background:#1947B8; color:#fff; border-color:#1947B8; }
+.notification-status { margin:16px 0 8px; color:var(--muted); font-size:14px; }
+.notification-status.notice-error { color:#8E222B; background:#FCE0E4; padding:12px; border-radius:10px; }
+.notification-total { font-size:16px; margin:16px 0; }
+.notification-list { display:grid; gap:14px; }
+.notification-card { background:#fff; border:1px solid var(--line); border-left:4px solid var(--line); border-radius:16px; padding:20px; min-width:0; overflow-wrap:anywhere; }
+.notification-new { border-left-color:#1947B8; }
+.notification-meta { display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px; margin-bottom:12px; }
+.notification-meta time { font-size:13px; color:var(--muted); }
+.notification-card h2 { font-size:20px; line-height:1.35; margin:0 0 8px; }
+.notification-card p { margin:0 0 14px; }
+.notification-context { display:flex; flex-wrap:wrap; gap:8px; font-size:13px; margin:12px 0; }
+.notification-context span { background:#F2F5FA; border-radius:6px; padding:5px 8px; }
+.notification-card .notification-source { font-size:13px; color:var(--muted); }
+.notification-actions .btn { white-space:normal; min-height:44px; }
+@media(max-width:480px) {
+  .notification-card { padding:16px; }
+  .notification-toolbar>div { width:100%; }
+  .notification-actions .btn { flex:1 1 150px; }
+  .notification-filters .btn { flex:1; padding-inline:8px; }
+}
+@media(forced-colors:active) { .notification-filters .btn[aria-pressed=true] { border:3px solid Highlight; } .notification-new { border-left:4px solid Highlight; } }
