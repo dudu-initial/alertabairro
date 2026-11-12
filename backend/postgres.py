@@ -1,6 +1,7 @@
 """Compatibility layer for the application's parameterized SQL on PostgreSQL."""
 import re
 import sqlite3
+import os
 
 SERIAL_TABLES = {"users", "sources", "occurrences", "occurrence_history", "alerts", "notifications"}
 
@@ -32,7 +33,11 @@ class Connection:
     def __init__(self, url):
         import psycopg
         self.driver = psycopg
-        self.raw = psycopg.connect(url, connect_timeout=10, prepare_threshold=None)
+        options = {"connect_timeout": 10, "prepare_threshold": None}
+        # A separate secret avoids manual URL-encoding of database passwords.
+        if os.environ.get("DATABASE_PASSWORD"):
+            options["password"] = os.environ["DATABASE_PASSWORD"]
+        self.raw = psycopg.connect(url, **options)
 
     def execute(self, sql, params=()):
         # Only repository-owned SQL is translated; values stay bound separately.

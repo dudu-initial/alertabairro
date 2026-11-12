@@ -31,6 +31,14 @@ class WSGIContractTests(test_api.APITests):
 
 
 class DeploymentTests(unittest.TestCase):
+    def test_separate_database_password_is_passed_without_url_interpolation(self):
+        from backend.postgres import Connection
+        with patch.dict("os.environ", {"DATABASE_PASSWORD": "test@:/?#pass"}), patch("psycopg.connect") as connect:
+            connection = Connection("postgresql://test@example.test:6543/postgres")
+            connect.assert_called_once_with("postgresql://test@example.test:6543/postgres",
+                connect_timeout=10, prepare_threshold=None, password="test@:/?#pass")
+            connection.close()
+
     def test_cloud_refuses_ephemeral_sqlite(self):
         with patch.dict("os.environ", {"VERCEL": "1", "DATABASE_URL": ""}):
             response = app.test_client().get("/api/health")
