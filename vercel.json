@@ -4,8 +4,8 @@
   "buildCommand": "python scripts/build_public.py",
   "functions": {
     "app.py": {
-      "includeFiles": ["frontend/**", "backend/catalog/**"],
-      "excludeFiles": ["node_modules/**", "tests/**", "docs/**", "data/**"]
+      "includeFiles": "{frontend,backend/catalog}/**",
+      "excludeFiles": "{node_modules,tests,docs,data}/**"
     }
   }
 }
