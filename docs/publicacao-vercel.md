@@ -21,7 +21,11 @@ e integração PostgreSQL ainda dependem das contas e da configuração do banco
    precisa estar codificada como componente de URL. Não a publique no GitHub.
 3. Guarde essa conexão em DATABASE_URL, variável secreta no painel da Vercel,
    para Production. Não use prefixos públicos como VITE_ ou NEXT_PUBLIC_.
-4. Para inicializar, em um terminal com DATABASE_URL configurada, execute:
+4. Para inicializar durante o build da Vercel, adicione também
+   ALERTABAIRRO_INIT_DB=1 em Production. O build cria as tabelas e a carga
+   demonstrativa no banco dedicado, sem apagar registros existentes.
+   Após a primeira publicação validada, essa variável pode ser removida.
+   Como alternativa, em um terminal com DATABASE_URL configurada, execute:
 
    ```powershell
    python -m pip install -r requirements.txt
