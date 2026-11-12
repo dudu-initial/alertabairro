@@ -113,6 +113,9 @@ def utc_now() -> str:
 
 
 def connect(db_path: str | Path) -> sqlite3.Connection:
+    if str(db_path).startswith(("postgres://", "postgresql://")):
+        from .postgres import Connection
+        return Connection(str(db_path))
     conn = sqlite3.connect(str(db_path), timeout=10)
     conn.row_factory = sqlite3.Row
     conn.execute("PRAGMA foreign_keys = ON")
@@ -152,6 +155,12 @@ def verify_password(password: str, encoded: str) -> bool:
 
 
 def init_database(db_path: str | Path) -> None:
+    if str(db_path).startswith(("postgres://", "postgresql://")):
+        from .postgres import schema_for_postgres
+        with db_session(db_path) as conn:
+            conn.execute("SELECT pg_advisory_xact_lock(72619301)")
+            conn.executescript(schema_for_postgres(SCHEMA))
+        return
     db_path = Path(db_path)
     db_path.parent.mkdir(parents=True, exist_ok=True)
     with db_session(db_path) as conn:
@@ -170,6 +179,10 @@ def seed_database(db_path: str | Path, reset: bool = False) -> bool:
     init_database(db_path)
     now = datetime.now(timezone.utc)
     with db_session(db_path) as conn:
+        if str(db_path).startswith(("postgres://", "postgresql://")):
+            if reset:
+                raise ValueError("Cloud database reset is disabled.")
+            conn.execute("SELECT pg_advisory_xact_lock(72619301)")
         if reset:
             for table in (
                 "notifications", "alerts", "occurrence_history", "occurrences",
@@ -282,6 +295,8 @@ def seed_database(db_path: str | Path, reset: bool = False) -> bool:
 
 
 def default_db_path(project_root: Path) -> Path:
+    if os.environ.get("DATABASE_URL"):
+        return os.environ["DATABASE_URL"]
     raw = os.environ.get("ALERTABAIRRO_DB", "data/alertabairro.sqlite3")
     path = Path(raw)
     return path if path.is_absolute() else project_root / path

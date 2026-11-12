@@ -201,6 +201,24 @@ Na etapa de urgência, Baixa usa verde, Média amarelo e Alta vermelho, com text
 
 Agente e gestor podem acessar **Todas as ocorrências**, abrir um registro e expandir **Excluir ocorrência**. A confirmação mostra o número e o título do registro; **Cancelar** mantém os dados. **Excluir definitivamente** apaga a ocorrência e, na mesma transação, seu histórico, alerta, notificações e metadados de IA. A ação está disponível em qualquer estado e não pode ser desfeita. Moradores não recebem o controle e a API rejeita suas tentativas com 403. Requisições sem sessão recebem 401; registro inexistente recebe 404.
 
+## Publicação na Vercel
+
+A entrada Flask em `app.py` e `vercel.json` preparam a publicação com PostgreSQL
+persistente. Consulte [o guia de publicação](docs/publicacao-vercel.md).
+O deploy público e a conexão real com o banco ainda precisam ser configurados
+e validados. A execução local continua usando SQLite.
+
+Para instalar as dependências da hospedagem e executar toda a suíte:
+
+```powershell
+python -m pip install -r requirements.txt
+python -m unittest discover -s tests -v
+node --test tests/*.test.cjs
+```
+
+Nesta adaptação passaram 61 testes Python e 25 testes Node. Os testes da entrada
+WSGI usam SQLite temporário; não substituem a validação PostgreSQL na nuvem.
+
 ## Central de notificações
 
 Abra o sino no cabeçalho ou **Mais → Central de notificações**. Os filtros **Todas**, **Não lidas** e **Lidas** organizam os avisos da conta. Cada cartão mostra mensagem, horário, bairro, risco, origem e indicador de confiança da ocorrência. **Ver ocorrência** abre os detalhes e marca o aviso como lido; também é possível marcar individualmente sem sair da central ou usar **Marcar todas como lidas**.

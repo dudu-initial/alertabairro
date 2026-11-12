@@ -11,3 +11,7 @@ coverage/
 Thumbs.db
 node_modules/
 .cache/
+.vercel/
+public/
+.env.*
+!.env.example

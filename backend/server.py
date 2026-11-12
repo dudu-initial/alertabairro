@@ -168,6 +168,8 @@ def make_handler(db_path: Path):
             self._pending_json = None
             try:
                 if path == "/api/health" and method == "GET":
+                    with db_session(db_path) as conn:
+                        conn.execute("SELECT COUNT(*) FROM users").fetchone()
                     self.send_json(200, {"status": "ok", "database": "ready", "version": "1.0.0"})
                     return
                 if path == "/api/auth/login" and method == "POST":
@@ -571,7 +573,7 @@ def create_server(
     if db_path is None:
         load_dotenv()
         db_path = default_db_path(PROJECT_ROOT)
-    resolved = Path(db_path).resolve()
+    resolved = str(db_path) if str(db_path).startswith(("postgres://", "postgresql://")) else Path(db_path).resolve()
     seed_database(resolved)
     with db_session(resolved) as conn:
         normalize_existing(conn)
