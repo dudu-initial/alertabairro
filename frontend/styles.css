@@ -503,8 +503,8 @@ input,select,textarea { font-size:16px; }
 .vision-actions,.vision-controls { display:flex; gap:10px; flex-wrap:wrap; }
 .vision-actions>* { flex:1 1 170px; }
 .vision-controls { margin-top:12px; }
-.vision-upload { position:relative; text-align:center; cursor:pointer; }
-.vision-upload input { position:absolute; width:1px; height:1px; opacity:0; }
+.vision-upload { position:relative; text-align:center; cursor:pointer; overflow:hidden; min-height:48px; }
+.vision-upload input { position:absolute; inset:0; width:100%; height:100%; margin:0; opacity:0; cursor:pointer; z-index:1; font-size:16px; }
 .vision-upload:focus-within { outline:3px solid #1947B8; outline-offset:3px; }
 .vision-upload:has(input:disabled) { opacity:.6; cursor:wait; }
 .vision-stage { position:relative; overflow:hidden; border-radius:12px; background:#17263C; margin-top:14px; }

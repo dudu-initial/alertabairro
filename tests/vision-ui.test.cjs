@@ -5,7 +5,7 @@ const vm=require('node:vm');
 const fs=require('node:fs');
 const rules=require('../frontend/vision-rules.js');
 function harness(getUserMedia,initialType='',winner=0){
-  const elements=new Map();let createdWorkers=0,terminatedWorkers=0,nextFrame=null;
+  const elements=new Map(),events={};let createdWorkers=0,terminatedWorkers=0,nextFrame=null;
   function element(id){
     if(!elements.has(id))elements.set(id,{hidden:false,value:'',textContent:'',files:[],width:640,height:480,videoWidth:640,videoHeight:480,listeners:{},addEventListener(name,fn){this.listeners[name]=fn;},removeAttribute(){},focus(){},play:async()=>{},getContext:()=>({drawImage(){},getImageData:()=>({data:new Uint8ClampedArray(640*480*4)})})});
     return elements.get(id);
@@ -15,10 +15,10 @@ function harness(getUserMedia,initialType='',winner=0){
     postMessage(data){queueMicrotask(()=>this.onmessage({data:data.type==='load'?{id:data.id,type:'ready'}:{id:data.id,type:'result',predictions:rules.CANDIDATES.map(([label],i)=>({label,score:i===winner?.9:.1/(rules.CANDIDATES.length-1)}))}}));}
     terminate(){terminatedWorkers++;}
   }
-  const context={document:{getElementById:element,addEventListener(){}},window:{addEventListener(){}},navigator:{mediaDevices:{getUserMedia}},isSecureContext:true,Worker:FakeWorker,AlertaVisionRules:rules,setTimeout:(fn,delay)=>{if(delay===3000){nextFrame=fn;return -1;}return setTimeout(fn,delay);},clearTimeout:(id)=>{if(id===-1)nextFrame=null;else clearTimeout(id);},Uint8ClampedArray,URL:{createObjectURL:()=> 'blob:unit-test',revokeObjectURL(){}},Image:class{width=640;height=480;decode(){return Promise.resolve();}}};
+  const context={document:{hidden:false,getElementById:element,addEventListener(name,fn){events[name]=fn;}},window:{addEventListener(){}},navigator:{mediaDevices:{getUserMedia}},isSecureContext:true,Worker:FakeWorker,AlertaVisionRules:rules,setTimeout:(fn,delay)=>{if(delay===3000){nextFrame=fn;return -1;}return setTimeout(fn,delay);},clearTimeout:(id)=>{if(id===-1)nextFrame=null;else clearTimeout(id);},Uint8ClampedArray,URL:{createObjectURL:()=> 'blob:unit-test',revokeObjectURL(){}},Image:class{width=640;height=480;decode(){return Promise.resolve();}}};
   vm.runInNewContext(fs.readFileSync(require.resolve('../frontend/vision.js'),'utf8'),context);
   const report={};element('report-type').value=initialType;context.AlertaVision.mount(report);
-  return {app:context.AlertaVision,element,report,advance:()=>nextFrame?.(),workers:()=>({createdWorkers,terminatedWorkers})};
+  return {app:context.AlertaVision,element,report,context,events,advance:()=>nextFrame?.(),workers:()=>({createdWorkers,terminatedWorkers})};
 }
 test('Photo analysis fills the type automatically; only Continue confirms the AI metadata',async()=>{
   const h=harness();h.element('vision-file').files=[{type:'image/jpeg',size:100}];
@@ -76,4 +76,39 @@ test('House fire classification automatically becomes Incêndio, while manual ch
   assert.equal(manual.element('vision-accept').hidden,false);
   manual.element('vision-accept').onclick();assert.equal(manual.element('report-type').value,'Incêndio');
   assert.equal(manual.report.description,'Descrição que eu já escrevi e quero preservar.');manual.app.destroy();
+});
+test('Gallery and camera have separate native file controls; gallery never forces capture',()=>{
+  const h=harness();const html=h.app.panel({});
+  const gallery=html.match(/<input id="vision-file"[^>]*>/)[0];
+  const camera=html.match(/<input id="vision-camera-file"[^>]*>/)[0];
+  assert.match(gallery,/accept="image\/\*"/);assert.ok(!gallery.includes('capture='));
+  assert.ok(camera.includes('capture="environment"'));
+  h.app.destroy();
+});
+test('Photo returned while native picker hides the page is analyzed after visibility returns',async()=>{
+  const h=harness();const input=h.element('vision-camera-file');
+  input.onclick();h.context.document.hidden=true;h.events.visibilitychange();
+  input.files=[{type:'image/jpeg',size:100}];await input.onchange();
+  assert.equal(h.workers().createdWorkers,0);
+  h.context.document.hidden=false;await h.events.visibilitychange();
+  assert.equal(h.report.type,'Alagamento');h.app.destroy();
+});
+test('Cancelled picker can be opened again and a MIME-less JPEG can be selected',async()=>{
+  const h=harness();const input=h.element('vision-file');
+  input.onclick();input.oncancel();assert.match(h.element('vision-status').textContent,/cancelada/);
+  input.onclick();input.files=[{type:'',name:'camera.JPG',size:100}];await input.onchange();
+  assert.equal(h.report.type,'Alagamento');assert.equal(input.disabled,false);h.app.destroy();
+});
+test('Queued photo is discarded when navigating away',async()=>{
+  const h=harness();const input=h.element('vision-file');
+  input.onclick();h.context.document.hidden=true;input.files=[{type:'image/jpeg',size:100}];await input.onchange();
+  h.app.destroy();h.context.document.hidden=false;await h.events.visibilitychange();
+  assert.equal(h.workers().createdWorkers,0);
+});
+test('Undecodable HEIC explains recovery and re-enables both pickers',async()=>{
+  const h=harness();h.context.Image=class{decode(){const error=new Error();error.name='EncodingError';return Promise.reject(error);}};
+  const input=h.element('vision-file');input.files=[{type:'image/heic',size:100}];await input.onchange();
+  assert.match(h.element('vision-status').textContent,/JPG\/PNG/);
+  assert.equal(input.disabled,false);assert.equal(h.element('vision-camera-file').disabled,false);
+  assert.equal(h.workers().createdWorkers,0);h.app.destroy();
 });
